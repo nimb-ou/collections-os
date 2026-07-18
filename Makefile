@@ -100,8 +100,8 @@ seed: check-env ## Generate and load synthetic data
 	else \
 		echo "$(YELLOW)Running in FULL_MODE (300k accounts - may take ~30 min)$(NC)"; \
 	fi
-	@# To be implemented in Session 2-3
-	@echo "$(RED)Not implemented yet - will be added in Session 2$(NC)"
+	python -m synthgen.seed
+	@echo "$(GREEN)✓ Seed complete$(NC)"
 
 daily: check-env ## Run the daily pipeline (ingest → transform → score → allocate → queue)
 	@echo "$(BLUE)Running daily pipeline...$(NC)"
