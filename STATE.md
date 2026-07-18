@@ -213,7 +213,7 @@ b06d352 - "Session 1: Initial scaffold - repository structure and database setup
 4. **Foreign key violations** - Implemented geo_id mapping from database SERIAL to Python objects
 
 ### Commit Hash
-(To be committed)
+47e6a64 - "Session 2: Synthetic data generator (synthgen core)"
 
 ---
 
