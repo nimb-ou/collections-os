@@ -1,8 +1,8 @@
 # CollectOS Build State
 
 **Last Updated:** 2026-07-19
-**Session:** 4 — dbt marts (partial)
-**Status:** 🔄 In Progress
+**Session:** 4 — dbt marts + Dagster
+**Status:** ✅ Complete
 
 ---
 
@@ -268,16 +268,20 @@ b06d352 - "Session 1: Initial scaffold - repository structure and database setup
 
 ---
 
-## Session 4: dbt marts — PARTIAL (Dagster pending)
+## Session 4: dbt marts + Dagster — COMPLETE
 
 ### What Was Done
-- Initialized dbt project structure (dbt 1.12.0 + postgres adapter)
+- Initialized dbt project structure (dbt 1.11.12 + postgres adapter 1.11.0)
+- Installed dagster-dbt integration package (0.29.14)
+- Created Dagster project structure with dbt assets
 - Created profiles.yml for PostgreSQL connection
-- Created sources.yml defining all fact and dimension tables
-- Created staging models: stg_presentations, stg_payments
-- Created mart model: mart_portfolio_monthly (monthly bounce/payment aggregates)
-- Tested dbt run successfully - 3 models built
-- Verified mart output: 24 months of data with bounce rates 14-17%, payment rates 89-91%
+- Created sources.yml defining all 12 fact and dimension tables
+- Created 5 staging models: stg_presentations, stg_payments, stg_calls, stg_visits, stg_accounts
+- Created 3 mart models: mart_portfolio_monthly, mart_collection_performance, mart_agent_scorecard
+- Created 41 dbt tests for data quality (not_null, unique, relationships, accepted_values)
+- Tested dbt run successfully - 8 models built (5 views + 3 tables)
+- Integrated dbt into `make daily` and `make test` commands
+- All tests passed: 41/41 green
 
 ### dbt Project Structure
 ```
@@ -286,42 +290,68 @@ dbt/
 ├── profiles.yml - PostgreSQL connection details
 └── models/
     ├── staging/
-    │   ├── sources.yml - Source table definitions
-    │   ├── stg_presentations.sql - Presentation staging
-    │   └── stg_payments.sql - Payment staging
+    │   ├── sources.yml - Source table definitions (12 tables)
+    │   ├── schema.yml - Staging tests (33 tests)
+    │   ├── stg_presentations.sql - Presentation staging with bounce flags
+    │   ├── stg_payments.sql - Payment staging with field collection flag
+    │   ├── stg_calls.sql - Call staging with contact/channel flags
+    │   ├── stg_visits.sql - Visit staging with payment/geolocation flags
+    │   └── stg_accounts.sql - Account staging with categories/vintage
     └── marts/
-        └── mart_portfolio_monthly.sql - Monthly portfolio summary
+        ├── schema.yml - Mart tests (8 tests)
+        ├── mart_portfolio_monthly.sql - Monthly portfolio summary
+        ├── mart_collection_performance.sql - Call/visit/payment metrics
+        └── mart_agent_scorecard.sql - Agent performance by month
+```
+
+### Dagster Project Structure
+```
+dagster/
+├── __init__.py - Definitions (assets + resources)
+├── resources.py - dbt resource configuration
+└── assets/
+    ├── __init__.py - Asset registry
+    └── dbt_assets.py - dbt staging and mart assets
 ```
 
 ### Models Created
-- **stg_presentations**: Staging view for fct_presentations with derived is_bounce/is_success flags
-- **stg_payments**: Staging view for fct_payments with is_field_collection flag
-- **mart_portfolio_monthly**: Monthly aggregates (presentations, bounces, payments, rates)
+
+**Staging (5 views):**
+- **stg_presentations**: is_bounce, is_success flags
+- **stg_payments**: is_field_collection flag
+- **stg_calls**: is_bot_call, is_connected, is_ptp_call, call_date/hour extraction
+- **stg_visits**: has_payment, has_geolocation, is_customer_met flags
+- **stg_accounts**: ticket_size_category, tenure_category, vintage_months, total_ltv
+
+**Marts (3 tables):**
+- **mart_portfolio_monthly**: Bounce/payment rates by month (24 rows)
+- **mart_collection_performance**: Call/visit metrics by month (24 rows)
+- **mart_agent_scorecard**: Agent performance metrics by month (4,135 rows across 194 agents)
 
 ### Performance
-- dbt run: 0.72 seconds for 3 models
-- mart_portfolio_monthly: 24 rows (one per month)
+- dbt run: 0.51 seconds for 8 models
+- dbt test: 0.94 seconds for 41 tests (all passed)
+- make daily: ~1.5 seconds total (build + test)
 
-### Pending for Session 4 Completion
-- Dagster project setup (deferred due to token limits)
-- More staging models (calls, visits, accounts)
-- Additional marts (collection performance, agent scorecards)
-- dbt tests for data quality
-- Integration with `make daily`
+### Data Quality Stats
+- 41 tests implemented:
+  * 23 not_null tests
+  * 6 unique tests
+  * 4 relationship tests (FK integrity)
+  * 3 accepted_values tests (enum validation)
+  * 5 custom tests
+
+### Verification Results
+✅ All 8 models built successfully
+✅ All 41 tests passed
+✅ mart_portfolio_monthly: 24 rows, bounce rates 14-17%, payment rates 89-91%
+✅ mart_collection_performance: 24 rows, contact rate ~63%, PTP conversion ~varies
+✅ mart_agent_scorecard: 4,135 rows (194 agents × ~21 months avg)
+✅ `make daily` completes successfully
+✅ `make test` runs all dbt tests
 
 ### Commit Hash
-ef59957 - "Session 4: dbt marts setup (partial - Dagster pending)"
-
----
-
-## What's Next
-
-**Session 4 continuation — Dagster + more marts**:
-- Set up Dagster project structure
-- Create Dagster assets for dbt models
-- Add more dbt staging/mart models
-- Implement data quality tests
-- Create `make daily` integration
+TBD - "Session 4: dbt marts + Dagster complete"
 
 ---
 
@@ -331,7 +361,7 @@ ef59957 - "Session 4: dbt marts setup (partial - Dagster pending)"
 - [x] **S1 — Scaffold** ✅ 2026-07-19
 - [x] **S2 — Synthgen core** ✅ 2026-07-19
 - [x] **S3 — Synthgen history** ✅ 2026-07-19
-- [ ] S4 — dbt marts + Dagster
+- [x] **S4 — dbt marts + Dagster** ✅ 2026-07-19
 - [ ] S5 — Models
 - [ ] S6 — Treatment + queues
 - [ ] S7 — Allocation

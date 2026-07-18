@@ -105,8 +105,14 @@ seed: check-env ## Generate and load synthetic data
 
 daily: check-env ## Run the daily pipeline (ingest → transform → score → allocate → queue)
 	@echo "$(BLUE)Running daily pipeline...$(NC)"
-	@# To be implemented in Sessions 4-7
-	@echo "$(RED)Not implemented yet - will be added in Sessions 4-7$(NC)"
+	@echo "$(YELLOW)Step 1/2: Running dbt transformations...$(NC)"
+	cd dbt && dbt run --profiles-dir .
+	@echo "$(GREEN)✓ dbt models built$(NC)"
+	@echo "$(YELLOW)Step 2/2: Running dbt tests...$(NC)"
+	cd dbt && dbt test --profiles-dir .
+	@echo "$(GREEN)✓ dbt tests passed$(NC)"
+	@echo "$(GREEN)✓ Daily pipeline complete$(NC)"
+	@echo "$(YELLOW)Note: Scoring, allocation, and queueing will be added in Sessions 5-7$(NC)"
 
 demo: check-env ## Run full end-to-end demo (seed → 30-day simulation)
 	@echo "$(BLUE)Running end-to-end demo...$(NC)"
@@ -115,15 +121,17 @@ demo: check-env ## Run full end-to-end demo (seed → 30-day simulation)
 
 test: ## Run all tests (pytest + dbt tests)
 	@echo "$(BLUE)Running tests...$(NC)"
-	@# Python tests
-	@if command -v pytest >/dev/null 2>&1; then \
+	@# dbt tests
+	@echo "$(YELLOW)Running dbt tests...$(NC)"
+	cd dbt && dbt test --profiles-dir .
+	@# Python tests (to be added later)
+	@if command -v pytest >/dev/null 2>&1 && [ -d "quality/" ]; then \
 		echo "$(YELLOW)Running pytest...$(NC)"; \
 		pytest quality/ -v; \
 	else \
-		echo "$(RED)pytest not found$(NC)"; \
+		echo "$(YELLOW)pytest tests will be added in later sessions$(NC)"; \
 	fi
-	@# dbt tests (to be added in Session 4)
-	@echo "$(YELLOW)dbt tests will be added in Session 4$(NC)"
+	@echo "$(GREEN)✓ All tests passed$(NC)"
 
 lint: ## Run linters (black, mypy)
 	@echo "$(BLUE)Running linters...$(NC)"

@@ -1,0 +1,114 @@
+version: 2
+
+models:
+  - name: stg_presentations
+    description: "Staging view for EMI presentations with bounce/success flags"
+    columns:
+      - name: presentation_id
+        description: "Unique presentation ID"
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: "Account reference"
+        tests:
+          - not_null
+          - relationships:
+              to: source('raw', 'dim_account')
+              field: account_id
+      - name: amount
+        description: "Presentation amount"
+        tests:
+          - not_null
+      - name: status
+        description: "Presentation status (B/S)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['B', 'S']
+
+  - name: stg_payments
+    description: "Staging view for payments with field collection flag"
+    columns:
+      - name: payment_id
+        description: "Unique payment ID"
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: "Account reference"
+        tests:
+          - not_null
+          - relationships:
+              to: source('raw', 'dim_account')
+              field: account_id
+      - name: amount
+        description: "Payment amount"
+        tests:
+          - not_null
+
+  - name: stg_calls
+    description: "Staging view for collection calls with derived flags"
+    columns:
+      - name: call_id
+        description: "Unique call ID"
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: "Account reference"
+        tests:
+          - not_null
+          - relationships:
+              to: source('raw', 'dim_account')
+              field: account_id
+      - name: channel
+        description: "Call channel (BOT/TELECALLER)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['BOT', 'TELECALLER', 'FIELD', 'SMS', 'EMAIL', 'SYSTEM']
+
+  - name: stg_visits
+    description: "Staging view for field visits with derived flags"
+    columns:
+      - name: visit_id
+        description: "Unique visit ID"
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: "Account reference"
+        tests:
+          - not_null
+          - relationships:
+              to: source('raw', 'dim_account')
+              field: account_id
+      - name: agent_id
+        description: "Agent reference"
+        tests:
+          - not_null
+
+  - name: stg_accounts
+    description: "Staging view for accounts with derived categories"
+    columns:
+      - name: account_id
+        description: "Unique account ID"
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: "Customer reference"
+        tests:
+          - not_null
+      - name: product_type
+        description: "Product type"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['LCV', 'HCV', 'TIPPER', 'TRACTOR', 'CE', 'EXCAVATOR', 'LOADER']
+      - name: status
+        description: "Account status (should be ACTIVE in staging)"
+        tests:
+          - accepted_values:
+              values: ['ACTIVE']

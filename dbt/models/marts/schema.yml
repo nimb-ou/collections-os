@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: mart_portfolio_monthly
+    description: "Monthly portfolio summary with bounce and payment rates"
+    columns:
+      - name: month
+        description: "Month of aggregation"
+        tests:
+          - not_null
+          - unique
+      - name: total_presentations
+        description: "Total presentations in month"
+        tests:
+          - not_null
+      - name: bounce_rate_pct
+        description: "Bounce rate percentage"
+        tests:
+          - not_null
+
+  - name: mart_collection_performance
+    description: "Monthly collection performance metrics (calls, visits, payments)"
+    columns:
+      - name: month
+        description: "Month of aggregation"
+        tests:
+          - not_null
+          - unique
+      - name: total_calls
+        description: "Total calls made"
+        tests:
+          - not_null
+      - name: contact_rate_pct
+        description: "Contact rate percentage"
+        tests:
+          - not_null
+
+  - name: mart_agent_scorecard
+    description: "Agent performance scorecard by month"
+    columns:
+      - name: agent_id
+        description: "Agent ID"
+        tests:
+          - not_null
+      - name: month
+        description: "Month of aggregation"
+        tests:
+          - not_null
+      - name: total_calls
+        description: "Total calls made by agent"
+        tests:
+          - not_null
+
+    tests:
+      # Test that agent_id + month combination is unique
+      - unique:
+          column_name: "agent_id || '_' || month::TEXT"
