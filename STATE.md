@@ -310,7 +310,7 @@ dbt/
 - Integration with `make daily`
 
 ### Commit Hash
-(To be committed)
+ef59957 - "Session 4: dbt marts setup (partial - Dagster pending)"
 
 ---
 
