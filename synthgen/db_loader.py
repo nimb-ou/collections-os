@@ -152,18 +152,17 @@ class DatabaseLoader:
 
         logger.info(f"✓ Loaded {len(accounts)} accounts")
 
-        # Store archetypes in a temporary table for history generation (Session 3)
+        # Store archetypes in permanent table for history generation (Session 3)
         logger.info("Storing archetypes for history generation...")
-        with self.conn.cursor() as cur:
-            cur.execute("""
-                CREATE TEMP TABLE IF NOT EXISTS account_archetypes (
-                    account_id VARCHAR(50) PRIMARY KEY,
-                    archetype VARCHAR(20) NOT NULL
-                )
-            """)
 
-            archetype_data = [(a.account_id, a.archetype) for a in accounts]
-            sql_archetype = "INSERT INTO account_archetypes VALUES (%s, %s) ON CONFLICT DO NOTHING"
+        archetype_data = [(a.account_id, a.archetype) for a in accounts]
+        sql_archetype = """
+            INSERT INTO account_archetypes (account_id, archetype)
+            VALUES (%s, %s)
+            ON CONFLICT (account_id) DO UPDATE SET archetype = EXCLUDED.archetype
+        """
+
+        with self.conn.cursor() as cur:
             execute_batch(cur, sql_archetype, archetype_data, page_size=1000)
             self.conn.commit()
 

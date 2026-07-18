@@ -82,10 +82,14 @@ class SynthgenConfig:
         n_acm = max(1, n_tl // 7)  # 1:7 span
         n_rcm = max(1, n_acm // 3)  # 1:3 span (zones)
 
-        database_url = os.getenv(
-            "DATABASE_URL",
-            "postgresql://collectos:collectos_dev_password@localhost:5432/collectos"
-        )
+        # Build database URL from components
+        db_host = os.getenv("POSTGRES_HOST", "localhost")
+        db_port = os.getenv("POSTGRES_PORT", "5432")
+        db_name = os.getenv("POSTGRES_DB", "collectos")
+        db_user = os.getenv("POSTGRES_USER", "collectos")
+        db_password = os.getenv("POSTGRES_PASSWORD", "collectos_dev_password_change_in_production")
+
+        database_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
         return cls(
             small_mode=small_mode,
