@@ -264,7 +264,7 @@ b06d352 - "Session 1: Initial scaffold - repository structure and database setup
 - Uses correct enum types for call_outcome and dispositions
 
 ### Commit Hash
-(To be committed)
+81819c7 - "Session 3: Behavioral history generation (24-month simulation)"
 
 ---
 
