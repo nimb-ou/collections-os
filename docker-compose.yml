@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: collectos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-collectos}
+      POSTGRES_USER: ${POSTGRES_USER:-collectos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-collectos_dev_password}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+      # Performance tuning
+      POSTGRES_MAX_CONNECTIONS: ${POSTGRES_MAX_CONNECTIONS:-100}
+      POSTGRES_SHARED_BUFFERS: ${POSTGRES_SHARED_BUFFERS:-2GB}
+      POSTGRES_WORK_MEM: ${POSTGRES_WORK_MEM:-50MB}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-collectos} -d ${POSTGRES_DB:-collectos}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Memory limit per §22.3
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    networks:
+      - collectos
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: collectos-metabase
+    restart: unless-stopped
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: ${POSTGRES_DB:-collectos}
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${POSTGRES_USER:-collectos}
+      MB_DB_PASS: ${POSTGRES_PASSWORD:-collectos_dev_password}
+      MB_DB_HOST: postgres
+      # Disable anonymous tracking
+      MB_SEND_USAGE_STATS: "false"
+      # Java opts for memory constraint
+      JAVA_OPTS: "-Xmx1536m"
+    ports:
+      - "${METABASE_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - metabase_data:/metabase-data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Memory limit per §22.3
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+    networks:
+      - collectos
+
+  # Mailpit for local email testing (dev only)
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: collectos-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    networks:
+      - collectos
+    profiles:
+      - dev  # Only start with --profile dev
+
+volumes:
+  postgres_data:
+    driver: local
+  metabase_data:
+    driver: local
+
+networks:
+  collectos:
+    driver: bridge
