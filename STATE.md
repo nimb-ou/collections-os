@@ -351,7 +351,7 @@ dagster/
 ✅ `make test` runs all dbt tests
 
 ### Commit Hash
-TBD - "Session 4: dbt marts + Dagster complete"
+52c4c41 - "Session 4: dbt marts + Dagster complete"
 
 ---
 
