@@ -1,0 +1,32 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Raw fact and dimension tables from PostgreSQL"
+    database: collectos
+    schema: public
+    tables:
+      - name: fct_presentations
+        description: "EMI presentations (NACH attempts)"
+      - name: fct_payments
+        description: "Payment events"
+      - name: fct_calls
+        description: "Collection calls (bot and human)"
+      - name: fct_visits
+        description: "Field agent visits"
+      - name: fct_ptp
+        description: "Promises to Pay"
+      - name: fct_sms
+        description: "SMS messages sent"
+      - name: dim_account
+        description: "Account master"
+      - name: dim_customer
+        description: "Customer master"
+      - name: dim_agent
+        description: "Agent/collector master"
+      - name: dim_team
+        description: "Team hierarchy"
+      - name: dim_geo
+        description: "Geography master"
+      - name: mart_account_daily
+        description: "Daily account snapshots (partitioned)"

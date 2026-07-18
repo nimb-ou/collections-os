@@ -1,0 +1,12 @@
+collectos:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5432
+      user: collectos
+      password: collectos_dev_password_change_in_production
+      dbname: collectos
+      schema: public
+      threads: 4

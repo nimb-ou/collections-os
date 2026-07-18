@@ -1,8 +1,8 @@
 # CollectOS Build State
 
 **Last Updated:** 2026-07-19
-**Session:** 3 — Synthgen History
-**Status:** ✅ Complete
+**Session:** 4 — dbt marts (partial)
+**Status:** 🔄 In Progress
 
 ---
 
@@ -268,14 +268,60 @@ b06d352 - "Session 1: Initial scaffold - repository structure and database setup
 
 ---
 
+## Session 4: dbt marts — PARTIAL (Dagster pending)
+
+### What Was Done
+- Initialized dbt project structure (dbt 1.12.0 + postgres adapter)
+- Created profiles.yml for PostgreSQL connection
+- Created sources.yml defining all fact and dimension tables
+- Created staging models: stg_presentations, stg_payments
+- Created mart model: mart_portfolio_monthly (monthly bounce/payment aggregates)
+- Tested dbt run successfully - 3 models built
+- Verified mart output: 24 months of data with bounce rates 14-17%, payment rates 89-91%
+
+### dbt Project Structure
+```
+dbt/
+├── dbt_project.yml - Project configuration
+├── profiles.yml - PostgreSQL connection details
+└── models/
+    ├── staging/
+    │   ├── sources.yml - Source table definitions
+    │   ├── stg_presentations.sql - Presentation staging
+    │   └── stg_payments.sql - Payment staging
+    └── marts/
+        └── mart_portfolio_monthly.sql - Monthly portfolio summary
+```
+
+### Models Created
+- **stg_presentations**: Staging view for fct_presentations with derived is_bounce/is_success flags
+- **stg_payments**: Staging view for fct_payments with is_field_collection flag
+- **mart_portfolio_monthly**: Monthly aggregates (presentations, bounces, payments, rates)
+
+### Performance
+- dbt run: 0.72 seconds for 3 models
+- mart_portfolio_monthly: 24 rows (one per month)
+
+### Pending for Session 4 Completion
+- Dagster project setup (deferred due to token limits)
+- More staging models (calls, visits, accounts)
+- Additional marts (collection performance, agent scorecards)
+- dbt tests for data quality
+- Integration with `make daily`
+
+### Commit Hash
+(To be committed)
+
+---
+
 ## What's Next
 
-**Session 4 — dbt marts + Dagster** (use Sonnet):
-- Set up dbt project structure
-- Create staging models from fact tables
-- Build aggregate marts (portfolio health, collection performance)
-- Set up Dagster for daily pipeline orchestration
-- Create data quality tests
+**Session 4 continuation — Dagster + more marts**:
+- Set up Dagster project structure
+- Create Dagster assets for dbt models
+- Add more dbt staging/mart models
+- Implement data quality tests
+- Create `make daily` integration
 
 ---
 
