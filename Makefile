@@ -114,10 +114,10 @@ daily: check-env ## Run the daily pipeline (ingest → transform → score → a
 	@echo "$(GREEN)✓ Daily pipeline complete$(NC)"
 	@echo "$(YELLOW)Note: Scoring, allocation, and queueing will be added in Sessions 5-7$(NC)"
 
-demo: check-env ## Run full end-to-end demo (seed → 30-day simulation)
+demo: check-env ## Run full end-to-end demo (complete workflow walkthrough)
 	@echo "$(BLUE)Running end-to-end demo...$(NC)"
-	@# To be implemented in Session 15
-	@echo "$(RED)Not implemented yet - will be added in Session 15$(NC)"
+	python scripts/demo.py
+	@echo "$(GREEN)✓ Demo complete$(NC)"
 
 test: ## Run all tests (pytest + dbt tests)
 	@echo "$(BLUE)Running tests...$(NC)"
