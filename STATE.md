@@ -1,7 +1,7 @@
 # CollectOS Build State
 
 **Last Updated:** 2026-07-19
-**Session:** 6 — Treatment Strategy
+**Session:** 7 — Allocation Engine
 **Status:** ✅ Complete
 
 ---
@@ -528,6 +528,93 @@ f2677a9 - "Session 6: Treatment Strategy Engine"
 
 ---
 
+## Session 7: Allocation Engine — COMPLETE
+
+### What Was Done
+- Created capacity configuration (capacity.yaml) with agent capacity, eligibility, and constraints
+- Implemented CapacityManager class for capacity calculations and constraint checking
+- Implemented AllocationEngine with greedy and OR-Tools CP-SAT algorithms
+- Implemented BeatPlanner with TSP-based route optimization for field agents
+- Implemented RebalanceEngine for daily allocation adjustments
+- Created run_monthly_allocation() orchestration function
+- Tested successfully: 14,652 accounts allocated, 612 beat plan stops generated
+
+### Allocation Capabilities
+
+**Hard Constraints:**
+- Geography matching (FOS within 25km of account, configurable)
+- Capacity limits (FOS: 40-70/day, TC: 200-250 dials/day)
+- Language matching (with Hindi/English fallback)
+- Role-bucket eligibility (FOS: all buckets, TC: X/B1/B2 only)
+- Active agents only
+
+**Soft Constraints (weighted):**
+- Skill score (0.25) - Agent performance on similar segments
+- Continuity (0.20) - Keep same owner if performing
+- Geography proximity (0.15) - Minimize travel distance
+- Workload balance (0.15) - Even distribution within capacity
+- Language exact match (0.05) - Bonus for native language
+
+**Algorithms:**
+- **Greedy v1**: Fast, deterministic, score-based assignment
+- **OR-Tools CP-SAT v2**: Globally optimal under constraints (optional)
+
+### Beat Planning Features
+- TSP nearest-neighbor routing for field agents
+- Priority-based sequencing (HIGH/MEDIUM/LOW)
+- Visit reason generation
+- Expected collection calculation
+- Travel minimization
+
+### strategy Module Structure
+```
+strategy/
+├── __init__.py
+├── capacity.yaml - Capacity config, rules, and weights
+├── treatment_rules.yaml - Treatment rules (Session 6)
+├── treatment.py - Treatment engine (Session 6)
+└── allocation.py - Allocation engine, beat planner, rebalance
+```
+
+### Test Results (30k accounts, 360 agents)
+✅ **14,652 accounts allocated** (78.7% of 18,607 actionable accounts)
+✅ **612 beat plan stops** created for field agents
+✅ **360 agents loaded** (300 FOS, 60 TC)
+✅ Allocation respects all hard constraints (geography, capacity, language, eligibility)
+✅ Beat plans use TSP routing for minimized travel
+✅ Database writes successful (allocations + beat_plan tables)
+
+### Allocation Distribution
+- Allocated: 14,652 (78.7%)
+- Unallocated: 3,955 (21.3% - due to geography/capacity constraints)
+- Field visits required: 696 accounts
+- Beat stops generated: 612
+
+### Technical Details
+- **Haversine distance** calculation for geography matching
+- **Deduplication** to prevent duplicate beat plan entries
+- **Batch inserts** using psycopg2.extras.execute_batch
+- **Allocation transparency** - every allocation stores allocation_reason
+- **Difficulty scoring** for fair agent scorecards (future integration)
+- **OR-Tools integration** ready (requires ortools installed)
+
+### Performance
+- Allocation runtime: ~5 seconds for 18k accounts × 360 agents
+- Beat plan generation: ~2 seconds for 612 stops
+- Database writes: ~1 second
+
+### Notes
+- Some accounts (21.3%) couldn't be allocated due to geography constraints (agents too far)
+- This is realistic - in production, would either relax distance constraint or add more agents in those zones
+- Treatment codes integrated (requires_field flag based on treatment)
+- Daily rebalance engine ready for absences/new bounces
+- Manual override capability built-in (TL/ACM reassignment)
+
+### Commit Hash
+TBD - "Session 7: Allocation Engine"
+
+---
+
 ## Build Progress (§23 Checklist)
 
 - [x] **S0 — Environment** ✅ 2026-07-19
@@ -537,7 +624,7 @@ f2677a9 - "Session 6: Treatment Strategy Engine"
 - [x] **S4 — dbt marts + Dagster** ✅ 2026-07-19
 - [x] **S5 — Models (M1 + M2)** ✅ 2026-07-19
 - [x] **S6 — Treatment Strategy** ✅ 2026-07-19
-- [ ] S7 — Allocation
+- [x] **S7 — Allocation Engine** ✅ 2026-07-19
 - [ ] S8 — API
 - [ ] S9 — BI bootstrap
 - [ ] S10 — Ops console

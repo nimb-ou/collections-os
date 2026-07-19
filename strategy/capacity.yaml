@@ -1,0 +1,213 @@
+# CollectOS Allocation & Capacity Configuration
+# Version: 1.0.0
+# Last Updated: 2026-07-19
+
+version: "1.0.0"
+description: "Agent capacity, allocation rules, and constraint weights"
+
+# Agent capacity by role (daily)
+capacity:
+  FOS:
+    min_accounts_per_day: 40
+    max_accounts_per_day: 70
+    default_accounts_per_day: 55
+    visit_capacity_per_day: 8  # Actual physical visits
+    call_capacity_per_day: 20  # Support calls from field
+
+  TC:
+    min_dials_per_day: 200
+    max_dials_per_day: 250
+    default_dials_per_day: 225
+    expected_connects_per_day: 70
+    expected_rpc_per_day: 45
+
+  TL:
+    supervision_span: 15  # Max agents per TL
+    review_capacity_per_day: 30  # High-risk accounts to review
+
+  ACM:
+    supervision_span_tls: 7  # Max TLs per ACM
+
+  RCM:
+    supervision_span_acms: 5  # Max ACMs per RCM
+
+# Role-bucket eligibility (which roles can handle which buckets)
+role_bucket_eligibility:
+  FOS:
+    eligible_buckets: ["X", "B1", "B2", "B3", "NPA_90", "NPA_120"]
+    preferred_buckets: ["B1", "B2", "B3"]  # Primary responsibility
+
+  TC:
+    eligible_buckets: ["X", "B1", "B2"]
+    preferred_buckets: ["X", "B1"]  # Pre-due and early post-bounce
+
+  # TL/ACM/RCM don't get direct allocations in v1 (review/supervision only)
+
+# Geography constraints
+geography:
+  # Pincode clustering for field beats
+  max_beat_radius_km: 25  # Maximum distance from agent base
+  prefer_cluster_radius_km: 10  # Preferred cluster tightness
+
+  # State-level language alignment
+  language_priority:
+    - state_primary  # State's primary language
+    - hindi  # National fallback
+    - english  # Universal fallback
+
+  # Urban vs rural multipliers
+  density_multipliers:
+    metro: 1.2  # Higher capacity in dense areas
+    urban: 1.0
+    semi_urban: 0.9
+    rural: 0.7  # Lower capacity in spread-out areas
+
+# Hard constraints (must be satisfied)
+hard_constraints:
+  geography_match:
+    enabled: true
+    description: "FOS must be within max_beat_radius_km of account location"
+
+  capacity_limits:
+    enabled: true
+    description: "Agent allocation must be within min/max capacity bounds"
+
+  language_match:
+    enabled: true
+    allow_fallback: true  # Allow Hindi/English fallback if no exact match
+    description: "Agent must speak customer's preferred language"
+
+  role_bucket_match:
+    enabled: true
+    description: "Role must be eligible for account bucket"
+
+  active_agents_only:
+    enabled: true
+    description: "Only allocate to active agents"
+
+# Soft constraints (weighted objectives)
+soft_constraints:
+  weights:
+    skill_score: 0.25  # Agent's historical performance on similar segments
+    continuity: 0.20  # Keep same owner as last month if performing
+    fairness: 0.20  # Balance difficulty across agents (M6 difficulty index)
+    geography_proximity: 0.15  # Minimize travel distance
+    workload_balance: 0.15  # Even distribution within capacity bounds
+    language_exact_match: 0.05  # Bonus for exact language match vs fallback
+
+  # Continuity rules
+  continuity:
+    retain_if_performance_above_percentile: 40  # Keep if agent > P40
+    retain_if_account_showing_progress: true  # Keep if DPD improving
+    break_if_no_contact_in_days: 30  # Reassign if no successful contact
+
+  # Skill-score weighting
+  skill_scoring:
+    use_last_n_months: 3
+    segments:
+      - bucket
+      - product_type
+      - risk_band
+      - value_band
+
+# Allocation strategies
+strategies:
+  monthly_base:
+    algorithm: "greedy"  # Options: greedy, ortools
+    run_on_day_of_month: 1
+    reassign_all: false  # If true, ignore continuity and reallocate fresh
+
+  daily_rebalance:
+    enabled: true
+    triggers:
+      - agent_absence  # Redistribute if agent marked absent
+      - new_bounces  # Assign new bounces per treatment
+      - manual_override  # TL/ACM manual reassignment
+    preserve_beat_stability: true  # Minimize mid-month changes
+
+  emergency_reallocation:
+    enabled: true
+    conditions:
+      - agent_terminated
+      - agent_extended_leave
+      - team_restructure
+
+# Beat planning (FOS only)
+beat_planning:
+  optimization_objective: "minimize_travel"  # Options: minimize_travel, maximize_collection
+
+  sequencing_rules:
+    - rule: "Start with closest to base location"
+      weight: 1.0
+    - rule: "Group nearby accounts (within 2 km)"
+      weight: 0.8
+    - rule: "High priority accounts early in day"
+      weight: 0.6
+    - rule: "Broken PTP accounts before 11 AM"
+      weight: 0.9
+
+  visit_time_windows:
+    residential: ["09:00", "12:00", "17:00", "19:00"]  # Avoid midday
+    commercial: ["10:00", "18:00"]  # Business hours
+
+  travel_time_assumptions:
+    avg_speed_urban_kmph: 20
+    avg_speed_rural_kmph: 35
+    avg_stop_duration_minutes: 25
+
+# Rebalance thresholds
+rebalance_thresholds:
+  max_imbalance_ratio: 1.3  # Max workload ratio between highest/lowest loaded agents in team
+  min_accounts_for_split: 5  # Don't bother rebalancing if < 5 accounts
+  absent_agent_reassign_within_hours: 2  # Redistribute absent agent's work quickly
+
+# Special handling
+special_handling:
+  high_value_accounts:
+    threshold_overdue_amt: 50000
+    assign_to_top_percentile_agents: 20  # Top 20% performers
+    require_tl_visibility: true
+
+  vip_customers:
+    identified_by: "segment = 'VIP'"  # Future: VIP flag
+    assign_to_senior_agents: true
+    require_acm_oversight: true
+
+  broken_ptp_escalation:
+    reassign_to_different_agent: true
+    escalate_to_next_role_level: false  # Keep in same role but different agent
+    require_tl_review: true
+
+# Reporting and transparency
+transparency:
+  log_all_allocation_decisions: true
+  store_allocation_reason: true  # Write to allocations.allocation_reason
+  allocation_reason_templates:
+    geo_capacity: "Geographic assignment: {agent_base} covers {account_pincode}, capacity available"
+    continuity: "Retained from previous month: performance P{percentile}, account progressing"
+    skill_match: "Best skill match: agent score {score:.2f} on {segment}"
+    new_assignment: "New allocation: balanced workload, {distance_km:.1f} km from base"
+    rebalance: "Rebalanced due to {trigger}: reassigned from {previous_agent}"
+    manual: "Manual override by {user}: {reason}"
+    high_value: "High-value account (₹{amount}): assigned to top performer"
+    broken_ptp: "Broken PTP escalation: reassigned for fresh approach"
+    language_match: "Language match: agent speaks {language}, customer prefers {language}"
+
+# Model integration
+model_integration:
+  use_difficulty_index: true  # M6 difficulty score for fairness
+  use_scorecard_history: true  # Agent performance for skill matching
+  difficulty_index_balance_tolerance: 0.05  # ±5% difficulty variance across agents acceptable
+
+# OR-Tools CP-SAT parameters (for algorithm: ortools)
+ortools_config:
+  max_time_seconds: 300  # 5 minutes timeout for optimization
+  num_search_workers: 4  # Parallel search threads
+  log_search_progress: false
+
+  # Objective function weights (normalized to 1.0)
+  objective_weights:
+    minimize_cost: 0.4  # Weighted distance + capacity violations
+    maximize_skill_match: 0.3
+    maximize_continuity: 0.2
+    maximize_fairness: 0.1
