@@ -1985,7 +1985,7 @@ insights/
 - Personalized briefs by role
 
 ### Commit Hash
-TBD - "Session 14: Scorecards, Impact, Interventions, and LLM Daily Briefs"
+0adb99e - "Session 14: Scorecards, Impact, Interventions, and LLM Daily Briefs"
 
 ---
 
