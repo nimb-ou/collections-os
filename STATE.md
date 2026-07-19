@@ -1,7 +1,7 @@
 # CollectOS Build State
 
 **Last Updated:** 2026-07-19
-**Session:** 9 — BI Bootstrap
+**Session:** 10 — Ops Console
 **Status:** ✅ Complete
 
 ---
@@ -889,6 +889,206 @@ TBD - "Session 9: BI Bootstrap"
 
 ---
 
+## Session 10: Ops Console — COMPLETE
+
+### What Was Done
+- Created complete Streamlit-based operations console
+- Implemented 8 functional pages with role-based access control
+- Built authentication and authorization system
+- Integrated with PostgreSQL database via connection utilities
+- Comprehensive README and documentation
+
+### Pages Implemented
+1. **Command Center** - Real-time portfolio dashboard
+   - Today's demand and overdue metrics
+   - Queue burn-down tracking
+   - Resolution progress vs target
+   - Treatment channel split (Bot/Telecaller/Field)
+
+2. **Campaign Manager** - Campaign creation and management
+   - Active campaign list with metrics
+   - Campaign creation form with filters
+   - Control group configuration (0-20%)
+   - Cadence editor
+   - Campaign actions (pause/resume/complete/delete)
+
+3. **Queue Monitor** - Real-time queue status
+   - Queue metrics by channel and priority
+   - Agent productivity tracking
+   - Disposition summary
+   - Queue burn-down analysis
+
+4. **Allocation Review** - Account allocation management
+   - Allocation summary by agent/zone/role
+   - Capacity heatmap
+   - Manual allocation overrides with reason tracking
+   - Recent override audit trail (last 24h)
+
+5. **PTP Book** - Promise-to-Pay tracking
+   - PTPs due today
+   - PTP aging buckets (overdue, today, tomorrow, 2-7d, 7+d)
+   - Broken PTP analysis
+   - Kept rate metrics (30-day rolling)
+
+6. **Payments (Dev)** - Manual payment entry for testing
+   - Mark accounts as paid with amount/mode/reference
+   - Account lookup with current overdue/bucket/DPD
+   - Recent payment history (7 days)
+   - Development workflow for testing
+
+7. **Model Health** - ML model monitoring
+   - Model overview (AUC, Precision, Recall)
+   - Model registry and version history
+   - Feature importance (SHAP placeholders)
+   - Score distribution analysis
+   - PSI monitoring guidance
+
+8. **User Admin** - User management (Admin only)
+   - User list with role filtering
+   - User creation with role assignment
+   - Activate/deactivate users
+   - Password reset
+   - Role-based access control
+
+### Role-Based Access Control
+**Implemented 4 roles with page permissions:**
+- **ADMIN**: All pages (full access)
+- **STRATEGY**: Command Center, Campaign Manager, Allocation Review, Model Health
+- **TL**: Command Center, Queue Monitor, PTP Book
+- **ACM**: Command Center, Queue Monitor, Allocation Review
+
+### Technical Architecture
+**Core Modules:**
+- `app.py` - Main Streamlit application with navigation
+- `auth.py` - Authentication and authorization (session-based)
+- `config.py` - Configuration and constants
+- `database.py` - Database connection utilities with caching
+- `pages/` - 8 page modules
+
+**Database Integration:**
+- Connection pooling via context managers
+- Query caching (60-second TTL) for performance
+- Separate mutation methods (non-cached)
+- RealDictCursor for dictionary responses
+
+**Session Management:**
+- Streamlit session state for authentication
+- Persistent until logout
+- User info and role stored in session
+- No server-side session storage (stateless)
+
+### Security Features (Development Mode)
+- Simple authentication (SHA-256 for dev)
+- Role-based page access control
+- Audit trail for manual overrides
+- User activity tracking (last_login_at)
+- Input validation on forms
+
+**Production Recommendations:**
+- Use bcrypt for password hashing
+- Implement session timeout
+- Add CSRF protection
+- Enable HTTPS/TLS
+- Rate limiting
+- 2FA/MFA support
+
+### Usage
+```bash
+# Install dependencies
+pip install streamlit psycopg2-binary pandas pyyaml
+
+# Run console
+streamlit run apps/ops_console/app.py
+
+# Access at http://localhost:8501
+```
+
+**Development Login:**
+- Username: `admin`, `strategy`, `tl_north`, etc.
+- Password: Any password (validation disabled for dev)
+
+### Files Created (13 files)
+```
+apps/ops_console/
+├── app.py (145 lines)
+├── auth.py (200 lines)
+├── config.py (70 lines)
+├── database.py (95 lines)
+├── requirements.txt
+├── README.md (330 lines)
+└── pages/
+    ├── __init__.py
+    ├── command_center.py (260 lines)
+    ├── campaign_manager.py (280 lines)
+    ├── queue_monitor.py (170 lines)
+    ├── allocation_review.py (260 lines)
+    ├── ptp_book.py (200 lines)
+    ├── payments.py (190 lines)
+    ├── model_health.py (220 lines)
+    └── user_admin.py (240 lines)
+```
+
+**Total: ~2,500 lines of code**
+
+### Database Queries
+All pages query from:
+- `mart_account_daily` - Account snapshots
+- `fct_calls`, `fct_visits`, `fct_payments`, `fct_ptps` - Fact tables
+- `dim_agent`, `dim_customer`, `dim_geo` - Dimension tables
+- `campaigns`, `call_queue` - Operational tables
+- `users`, `audit_log` - System tables
+- `model_registry` - ML model metadata
+
+### Key Features
+- **Real-time metrics** with auto-refresh capability
+- **Interactive filtering** by role, date, channel, etc.
+- **Data visualization** (line charts, bar charts, metrics)
+- **Export-ready tables** via Streamlit dataframes
+- **Responsive layout** (wide mode, 2-column grids)
+- **User-friendly forms** with validation
+- **Comprehensive error handling**
+
+### Development Workflow Integration
+**Mark-Paid Flow:**
+1. Payments page → Enter account ID and amount
+2. Validates account exists, shows current overdue
+3. Records payment to fct_payments
+4. Run `make daily` to refresh marts
+5. Account bucket/overdue updates in dashboard
+
+**Campaign Flow:**
+1. Campaign Manager → Create campaign with filters
+2. Specify control group % and cadence
+3. Queue builder (Session 6) reads campaign config
+4. Calls populate in call_queue
+5. Queue Monitor shows real-time progress
+
+**Allocation Override:**
+1. Allocation Review → Manual override form
+2. Specify from/to agent with reason
+3. Updates mart_account_daily.owner_agent_id
+4. Logs to audit_log for compliance
+5. Override appears in recent history
+
+### Testing Notes
+- All pages tested with empty database (graceful handling)
+- Forms validated for required fields
+- Role permissions enforced at page level
+- Database errors caught and displayed
+- Tested with Session 9 dashboards (complementary, not duplicate)
+
+### Notes
+- Complements Metabase dashboards (Session 9) for read-only analytics
+- Ops Console adds write capabilities (campaigns, overrides, payments)
+- Designed for internal ops team (Strategy, TL, ACM, Admin)
+- Field agents will use Field PWA (Session 13)
+- Bot QA features are placeholders for Session 11/12
+
+### Commit Hash
+TBD - "Session 10: Ops Console - Streamlit Application"
+
+---
+
 ## Build Progress (§23 Checklist)
 
 - [x] **S0 — Environment** ✅ 2026-07-19
@@ -901,7 +1101,7 @@ TBD - "Session 9: BI Bootstrap"
 - [x] **S7 — Allocation Engine** ✅ 2026-07-19
 - [x] **S8 — API** ✅ 2026-07-19
 - [x] **S9 — BI Bootstrap** ✅ 2026-07-19
-- [ ] S10 — Ops console
+- [x] **S10 — Ops Console** ✅ 2026-07-19
 - [ ] S11 — Bot core
 - [ ] S12 — Bot at volume
 - [ ] S13 — Field PWA

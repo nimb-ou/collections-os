@@ -1,0 +1,7 @@
+# CollectOS Ops Console Requirements
+# Streamlit-based operations console
+
+streamlit>=1.28.0
+psycopg2-binary>=2.9.0
+pandas>=2.0.0
+pyyaml>=6.0
