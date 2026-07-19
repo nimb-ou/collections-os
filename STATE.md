@@ -437,7 +437,7 @@ models_ml/
 - Both models ready for batch scoring pipeline integration
 
 ### Commit Hash
-TBD - "Session 5: ML Models (M1 Bounce + M2 Self-cure)"
+5becd42 - "Session 5: ML Models (M1 Bounce + M2 Self-cure)"
 
 ---
 
