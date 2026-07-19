@@ -28,6 +28,16 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+# Load .env file
+env_file = project_root / '.env'
+if env_file.exists():
+    with open(env_file) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                os.environ.setdefault(key.strip(), value.strip())
+
 import psycopg2
 import psycopg2.extras
 
@@ -43,11 +53,26 @@ class DemoRunner:
             'user': 'collectos',
             'password': os.getenv('POSTGRES_PASSWORD'),
         }
-        self.demo_date = date.today()
+        # Get latest available date from database
+        self.demo_date = self._get_latest_date()
 
     def get_db_connection(self):
         """Create database connection"""
         return psycopg2.connect(**self.db_config)
+
+    def _get_latest_date(self):
+        """Get the latest date available in mart_account_daily"""
+        try:
+            with self.get_db_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT MAX(date) FROM mart_account_daily")
+                    result = cur.fetchone()
+                    if result and result[0]:
+                        return result[0]
+        except:
+            pass
+        # Fallback to yesterday if database query fails
+        return date.today() - timedelta(days=1)
 
     def print_header(self, title: str):
         """Print section header"""
@@ -71,8 +96,8 @@ class DemoRunner:
                 cur.execute("""
                     SELECT
                         COUNT(*) as total_accounts,
-                        SUM(overdue_amt) as total_overdue,
-                        AVG(dpd) as avg_dpd
+                        COALESCE(SUM(overdue_amt), 0) as total_overdue,
+                        COALESCE(AVG(dpd), 0) as avg_dpd
                     FROM mart_account_daily
                     WHERE date = %s
                 """, (self.demo_date,))
@@ -83,17 +108,22 @@ class DemoRunner:
                     SELECT
                         bucket,
                         COUNT(*) as accounts,
-                        SUM(overdue_amt) as overdue
+                        COALESCE(SUM(overdue_amt), 0) as overdue
                     FROM mart_account_daily
                     WHERE date = %s
                     GROUP BY bucket
                     ORDER BY
                         CASE bucket
+                            WHEN 'PRE_DUE' THEN 0
                             WHEN 'X' THEN 1
                             WHEN 'B1' THEN 2
                             WHEN 'B2' THEN 3
                             WHEN 'B3' THEN 4
-                            WHEN '90+' THEN 5
+                            WHEN 'NPA_90' THEN 5
+                            WHEN 'NPA_120' THEN 6
+                            WHEN 'NPA_150' THEN 7
+                            WHEN 'NPA_180+' THEN 8
+                            ELSE 9
                         END
                 """, (self.demo_date,))
                 buckets = cur.fetchall()
@@ -129,21 +159,26 @@ class DemoRunner:
                         account_id,
                         bucket,
                         dpd,
-                        bounce_p,
-                        selfcure_p
+                        COALESCE(bounce_p, 0.15) as bounce_p,
+                        COALESCE(selfcure_p, 0.30) as selfcure_p
                     FROM mart_account_daily
                     WHERE date = %s
                       AND bucket IN ('B1', 'B2', 'B3')
+                      AND bounce_p IS NOT NULL
+                      AND selfcure_p IS NOT NULL
                     ORDER BY RANDOM()
                     LIMIT 5
                 """, (self.demo_date,))
                 samples = cur.fetchall()
 
         self.print_step("Sample Predictions")
-        print(f"  {'Account':<12} {'Bucket':<8} {'DPD':<8} {'Bounce P':<12} {'Selfcure P'}")
-        print(f"  {'-'*12} {'-'*8} {'-'*8} {'-'*12} {'-'*12}")
-        for acc in samples:
-            print(f"  {acc['account_id']:<12} {acc['bucket']:<8} {acc['dpd']:<8} {acc['bounce_p']:>10.1%}   {acc['selfcure_p']:>10.1%}")
+        if samples:
+            print(f"  {'Account':<12} {'Bucket':<8} {'DPD':<8} {'Bounce P':<12} {'Selfcure P'}")
+            print(f"  {'-'*12} {'-'*8} {'-'*8} {'-'*12} {'-'*12}")
+            for acc in samples:
+                print(f"  {acc['account_id']:<12} {acc['bucket']:<8} {acc['dpd']:<8} {acc['bounce_p']:>10.1%}   {acc['selfcure_p']:>10.1%}")
+        else:
+            print(f"  (No ML predictions available - run models_ml training first)")
         print()
 
         time.sleep(2)
@@ -162,8 +197,8 @@ class DemoRunner:
                     WITH treatment_segments AS (
                         SELECT
                             CASE
-                                WHEN bounce_p >= 0.40 AND selfcure_p < 0.20 THEN 'FIELD_URGENT'
-                                WHEN bounce_p >= 0.25 AND bucket IN ('B2', 'B3') THEN 'BOT_CALL'
+                                WHEN COALESCE(bounce_p, 0.15) >= 0.40 AND COALESCE(selfcure_p, 0.30) < 0.20 THEN 'FIELD_URGENT'
+                                WHEN COALESCE(bounce_p, 0.15) >= 0.25 AND bucket IN ('B2', 'B3') THEN 'BOT_CALL'
                                 WHEN bucket = 'B1' THEN 'SMS_REMINDER'
                                 ELSE 'MONITOR'
                             END as treatment,
@@ -234,10 +269,10 @@ class DemoRunner:
                 cur.execute("""
                     SELECT
                         COUNT(*) as total_calls,
-                        SUM(CASE WHEN call_outcome = 'CONNECT_RPC' THEN 1 ELSE 0 END) as connected,
-                        SUM(CASE WHEN call_outcome = 'CONNECT_RPC' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*), 0) as connection_rate
+                        SUM(CASE WHEN outcome = 'CONNECTED' THEN 1 ELSE 0 END) as connected,
+                        SUM(CASE WHEN outcome = 'CONNECTED' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*), 0) as connection_rate
                     FROM fct_calls
-                    WHERE DATE(call_date) = %s
+                    WHERE DATE(call_start_time) = %s
                       AND channel = 'BOT'
                 """, (self.demo_date,))
                 bot_stats = cur.fetchone()
