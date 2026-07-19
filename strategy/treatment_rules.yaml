@@ -1,0 +1,198 @@
+# CollectOS Treatment Strategy Rules
+# Version: 1.0.0
+# Last Updated: 2026-07-19
+
+version: "1.0.0"
+description: "Treatment assignment rules based on bucket, risk, value, and events"
+
+# Risk bands (based on model scores)
+risk_bands:
+  low: { bounce_p_max: 0.10 }
+  medium: { bounce_p_min: 0.10, bounce_p_max: 0.35 }
+  high: { bounce_p_min: 0.35, bounce_p_max: 0.60 }
+  very_high: { bounce_p_min: 0.60 }
+
+# Value bands (based on overdue amount)
+value_bands:
+  low: { overdue_max: 10000 }
+  medium: { overdue_min: 10000, overdue_max: 25000 }
+  high: { overdue_min: 25000, overdue_max: 50000 }
+  very_high: { overdue_min: 50000 }
+
+# Treatment codes and their definitions
+treatments:
+  T001_SMS_ONLY:
+    name: "SMS Only Pre-due"
+    description: "Low-risk pre-due: single SMS reminder"
+    channels: [SMS]
+    cadence: "D-3"
+    priority: 1
+
+  T002_BOT_SMS:
+    name: "Bot + SMS Pre-due"
+    description: "Medium-risk pre-due: bot call + SMS"
+    channels: [BOT, SMS]
+    cadence: "Bot D-3, SMS D-1"
+    priority: 2
+
+  T003_BOT_TC_SMS:
+    name: "Bot + Telecaller + SMS"
+    description: "High-risk pre-due: bot + telecaller + SMS"
+    channels: [BOT, TELECALLER, SMS]
+    cadence: "Bot D-4, TC D-2, SMS D-1"
+    priority: 3
+
+  T004_SUPPRESS_SELFCURE:
+    name: "Suppress - High Self-cure"
+    description: "Bounced with high self-cure probability - suppress 5 days, SMS only"
+    channels: [SMS]
+    cadence: "SMS nudge D+1, verify D+5"
+    priority: 1
+    suppress_days: 5
+
+  T005_BOT_BOUNCE:
+    name: "Bot Post-bounce"
+    description: "Mid-risk bounce: bot day-1, escalate if no PTP"
+    channels: [BOT, TELECALLER]
+    cadence: "Bot D+1, TC D+2 if no PTP"
+    priority: 4
+
+  T006_TC_FIELD:
+    name: "Telecaller + Field"
+    description: "High-risk/broken PTP: TC day-1, field within 72h"
+    channels: [TELECALLER, FIELD]
+    cadence: "TC D+1, Field within 3d"
+    priority: 5
+
+  T007_FIELD_LED:
+    name: "Field-led B2/B3"
+    description: "Bucket 2/3: field-led with telecaller support"
+    channels: [FIELD, TELECALLER]
+    cadence: "Field weekly, TC support"
+    priority: 6
+
+  T008_HARD_COLLECT:
+    name: "Hard Collection 90+"
+    description: "90+ DPD: intensive field collection"
+    channels: [FIELD, TELECALLER]
+    cadence: "Daily field + TC"
+    priority: 7
+
+  T009_PTP_REMINDER:
+    name: "PTP Reminder"
+    description: "Active PTP: reminder D-1"
+    channels: [SMS, BOT]
+    cadence: "SMS + Bot D-1 before PTP date"
+    priority: 3
+
+  T010_BROKEN_PTP:
+    name: "Broken PTP Escalation"
+    description: "PTP broken: escalate treatment level"
+    channels: [TELECALLER, FIELD]
+    cadence: "TC immediate, field if high value"
+    priority: 6
+
+# Treatment assignment rules (evaluated in order)
+rules:
+  # Rule 1: Active PTP - reminder cadence
+  - name: "Active PTP Reminder"
+    conditions:
+      has_active_ptp: true
+    treatment: T009_PTP_REMINDER
+
+  # Rule 2: Broken PTP - escalate
+  - name: "Broken PTP"
+    conditions:
+      has_broken_ptp: true
+    treatment: T010_BROKEN_PTP
+
+  # Rule 3: Pre-due low risk
+  - name: "Pre-due Low Risk"
+    conditions:
+      bucket: "X"
+      risk_band: "low"
+      days_to_due: { min: 1, max: 7 }
+    treatment: T001_SMS_ONLY
+
+  # Rule 4: Pre-due medium risk
+  - name: "Pre-due Medium Risk"
+    conditions:
+      bucket: "X"
+      risk_band: "medium"
+      days_to_due: { min: 1, max: 7 }
+    treatment: T002_BOT_SMS
+
+  # Rule 5: Pre-due high risk
+  - name: "Pre-due High Risk"
+    conditions:
+      bucket: "X"
+      risk_band: ["high", "very_high"]
+      days_to_due: { min: 1, max: 7 }
+    treatment: T003_BOT_TC_SMS
+
+  # Rule 6: Bounced - high self-cure probability
+  - name: "Bounced High Self-cure"
+    conditions:
+      bucket: "B1"
+      days_since_bounce: { max: 1 }
+      selfcure_p: { min: 0.7 }
+    treatment: T004_SUPPRESS_SELFCURE
+
+  # Rule 7: Bounced - mid risk
+  - name: "Bounced Mid Risk"
+    conditions:
+      bucket: "B1"
+      risk_band: "medium"
+      days_since_bounce: { max: 7 }
+    treatment: T005_BOT_BOUNCE
+
+  # Rule 8: Bounced - high risk or no contact
+  - name: "Bounced High Risk"
+    conditions:
+      bucket: "B1"
+      risk_band: ["high", "very_high"]
+      days_since_bounce: { max: 7 }
+    treatment: T006_TC_FIELD
+
+  # Rule 9: Bucket 2/3
+  - name: "Early Bucket"
+    conditions:
+      bucket: ["B2", "B3"]
+    treatment: T007_FIELD_LED
+
+  # Rule 10: 90+ DPD
+  - name: "90+ Hard Collection"
+    conditions:
+      bucket: ["NPA1", "NPA2", "NPA3"]
+    treatment: T008_HARD_COLLECT
+
+  # Default: Bot + SMS for any unmatched
+  - name: "Default Treatment"
+    conditions: {}
+    treatment: T002_BOT_SMS
+
+# Guardrails (hard constraints)
+guardrails:
+  contact_limits:
+    max_calls_per_day: 2
+    max_visits_per_day: 1
+    max_total_contacts_per_week: 10
+
+  timing:
+    call_window_start: "08:00"
+    call_window_end: "19:00"
+    no_sundays: true
+    no_public_holidays: true
+
+  cool_off:
+    after_rpc_hours: 48  # 48h cool-off after right-party contact
+    after_visit_hours: 72  # 72h cool-off after field visit
+    exception_for_ptp: true  # Can contact before PTP date
+
+  respect:
+    dnc_flag: true  # Never contact if DNC flag set
+    language_preference: true  # Match agent language to customer
+
+  script_compliance:
+    recording_disclosure_required: true
+    script_id_mandatory: true
