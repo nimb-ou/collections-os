@@ -611,7 +611,7 @@ strategy/
 - Manual override capability built-in (TL/ACM reassignment)
 
 ### Commit Hash
-TBD - "Session 7: Allocation Engine"
+1a94388 - "Session 7: Allocation Engine"
 
 ---
 
