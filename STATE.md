@@ -1,7 +1,7 @@
 # CollectOS Build State
 
 **Last Updated:** 2026-07-19
-**Session:** 7 — Allocation Engine
+**Session:** 8 — API
 **Status:** ✅ Complete
 
 ---
@@ -615,6 +615,143 @@ strategy/
 
 ---
 
+## Session 8: API — COMPLETE
+
+### What Was Done
+- Created complete FastAPI backend with JWT authentication
+- Implemented 12 API endpoints across 4 routers
+- Built role-based access control with 6 user roles
+- Implemented audit logging middleware
+- Created Pydantic models for request/response validation
+- Configured CORS and security headers
+- Created seed script for test users
+
+### API Structure
+```
+api/
+├── __init__.py
+├── config.py - Settings with pydantic-settings
+├── database.py - PostgreSQL connection management
+├── auth.py - JWT tokens, password hashing, RBAC
+├── models.py - Pydantic request/response models (20+ schemas)
+├── middleware.py - Audit logging middleware
+├── main.py - FastAPI app with health checks
+├── seed_users.py - Test user seeding script
+└── routers/
+    ├── auth.py - Login, token generation
+    ├── accounts.py - Account cards, history
+    ├── queues.py - Queue management, dispositions
+    └── beatplan.py - Beat plans, scorecards
+```
+
+### Endpoints Implemented
+
+**Authentication:**
+- `POST /api/v1/auth/login` - JWT login
+- `GET /api/v1/auth/me` - Current user info
+
+**Accounts:**
+- `GET /api/v1/accounts/{id}` - Account insight card with SHAP reasons
+- `GET /api/v1/accounts/{id}/history` - 90-day history (presentations, payments, calls, visits, PTPs)
+
+**Queues & Dispositions:**
+- `GET /api/v1/queues/next?agent={id}` - Next queue item for agent
+- `POST /api/v1/dispositions` - Create disposition record
+
+**Beat Plans & Scorecards:**
+- `GET /api/v1/beatplan/{agent_id}/{date}` - Daily beat plan with TSP routing
+- `GET /api/v1/scorecards/{entity_type}/{entity_id}` - Performance scorecards
+
+**Health:**
+- `GET /` - API root with version info
+- `GET /health` - Health check with database status
+
+### Security Features
+
+**Authentication:**
+- JWT tokens with HS256 algorithm
+- 8-hour token expiration (configurable)
+- Bcrypt password hashing
+- Failed login attempt tracking
+
+**Authorization:**
+- Role-based access control (RBAC)
+- 6 roles: ADMIN, STRATEGY, TL, ACM, AGENT, AUDITOR
+- Agent can only access own queue/beatplan
+- Supervisors can access subordinate data
+- PII masking for AUDITOR role (configurable)
+
+**Audit Trail:**
+- All mutations logged to audit_log
+- Captures: user, endpoint, method, timestamp, IP, user-agent
+- Response status and duration tracked
+- Non-blocking audit logging (failures don't break requests)
+
+### Technical Details
+- **FastAPI 0.116.1**: Async ASGI framework
+- **Pydantic 2.x**: Request/response validation
+- **python-jose**: JWT token handling
+- **passlib**: Bcrypt password hashing
+- **psycopg2**: PostgreSQL driver with RealDictCursor
+- **CORS**: Configured for React PWA, Streamlit, Vite dev servers
+- **OpenAPI**: Auto-generated docs at `/docs` and `/redoc`
+
+### Request/Response Models (20+ Pydantic schemas)
+- LoginRequest, TokenResponse
+- AccountCard, AccountHistory
+- QueueItem, DispositionCreate, DispositionResponse
+- PTPCreate, PTPResponse, PTPBookItem
+- PaymentCreate, PaymentResponse
+- BeatPlanStop, AgentScorecard
+- CampaignCreate, CampaignResponse
+- InterventionUpdate, InterventionResponse
+
+### Configuration
+- Environment-based configuration (pydantic-settings)
+- Secret key for JWT (default for dev, override for production)
+- Database URL from environment
+- CORS origins configurable
+- Rate limiting prepared (60 req/min default)
+
+### Test Users Created
+Script creates 7 test users (one per role):
+- admin / admin123 (ADMIN)
+- strategy / strategy123 (STRATEGY)
+- tl_north / tl123 (TL)
+- acm_north / acm123 (ACM)
+- fos_delhi / fos123 (AGENT - FOS)
+- tc_delhi / tc123 (AGENT - TC)
+- auditor / audit123 (AUDITOR)
+
+### Usage
+```bash
+# Start API server
+python -m api.main
+# Or with uvicorn
+uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+
+# API available at http://localhost:8000
+# Docs at http://localhost:8000/docs
+# Health check at http://localhost:8000/health
+```
+
+### Notes
+- All endpoints require JWT authentication (except /auth/login and /health)
+- Database connection uses context managers for automatic cleanup
+- Middleware is non-blocking - audit log failures don't break requests
+- PII masking for AUDITOR role is configured but not yet enforced in queries
+- Campaign and intervention endpoints planned for future sessions
+
+### Dependencies Added
+- passlib[bcrypt] - Password hashing
+- python-jose[cryptography] - JWT tokens
+- pydantic-settings - Environment configuration
+
+### Commit Hash
+TBD - "Session 8: API"
+
+---
+
 ## Build Progress (§23 Checklist)
 
 - [x] **S0 — Environment** ✅ 2026-07-19
@@ -625,7 +762,7 @@ strategy/
 - [x] **S5 — Models (M1 + M2)** ✅ 2026-07-19
 - [x] **S6 — Treatment Strategy** ✅ 2026-07-19
 - [x] **S7 — Allocation Engine** ✅ 2026-07-19
-- [ ] S8 — API
+- [x] **S8 — API** ✅ 2026-07-19
 - [ ] S9 — BI bootstrap
 - [ ] S10 — Ops console
 - [ ] S11 — Bot core
