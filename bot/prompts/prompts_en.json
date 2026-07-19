@@ -1,0 +1,38 @@
+{
+  "greeting_formal": "Hello, I am calling from the bank.",
+  "greeting_with_name": "Hello, I am calling from the bank. May I speak with {customer_name}?",
+  "identity_confirm": "Thank you for confirming.",
+  "identity_verify": "Am I speaking with {customer_name}?",
+  "wrong_party": "I apologize for the inconvenience. Could you please pass the phone to {customer_name}?",
+
+  "disclosure_recording": "Before we proceed, I want to inform you that this call is being recorded for quality and training purposes. Do you acknowledge this?",
+  "disclosure_acknowledge": "Thank you for acknowledging.",
+  "disclosure_refuse": "I understand. We cannot proceed without your acknowledgment. We will contact you through other means. Thank you.",
+
+  "purpose_bounce": "I'm calling regarding your loan for {product_type}. Your recent EMI payment of Rs. {emi_amount} could not be processed.",
+  "purpose_reminder": "This is a friendly reminder that your EMI of Rs. {emi_amount} is due on {due_date}.",
+
+  "payment_when": "When would you be able to make the payment of Rs. {overdue_amt}?",
+  "payment_partial": "Any payment helps. How much can you pay, and when?",
+
+  "ptp_confirm": "To confirm - you will pay Rs. {ptp_amount} on {ptp_date}. Is this correct?",
+  "ptp_confirmed": "Excellent. I have recorded your promise to pay Rs. {ptp_amount} by {ptp_date}.",
+  "ptp_sms": "You will receive an SMS with payment details and a UPI link.",
+
+  "dispute_escalate": "I understand your concern. I will escalate this to our team who will contact you within 48 hours.",
+  "paid_claim": "Thank you for informing. Could you please share the payment reference or transaction ID?",
+  "paid_verify": "Thank you. We will verify this and update our records.",
+
+  "hardship_understand": "I understand this is a difficult time. Can you pay at least a partial amount?",
+  "hardship_escalate": "I understand. I will have our support team contact you.",
+
+  "human_transfer": "I will transfer you to one of our representatives. Please hold.",
+  "callback": "I will have someone call you back. Thank you.",
+
+  "closing_thanks": "Thank you for speaking with me today. We appreciate your cooperation.",
+  "closing_goodbye": "Thank you for your time. Have a good day. Goodbye.",
+
+  "technical_error": "I'm experiencing a technical issue. Please call our customer service. Goodbye.",
+  "unclear_repeat": "I didn't catch that. Could you please repeat?",
+  "unclear_escalate": "I'm having trouble hearing you. Let me connect you to someone who can help."
+}

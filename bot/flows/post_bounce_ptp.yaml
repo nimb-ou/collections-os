@@ -1,0 +1,200 @@
+# Post-Bounce Promise-to-Pay Flow
+# Triggered after EMI bounce to negotiate payment
+
+flow_name: post_bounce_ptp
+description: "Outbound call after bounce to capture PTP"
+
+# States define the conversation flow
+states:
+  # Start: Initial greeting
+  start:
+    entry_prompt: "Namaste, I am calling from the bank. May I speak with {customer_name}?"
+    transitions:
+      - intent: confirm_identity
+        next_state: disclosure
+        response: "Thank you for confirming."
+      - intent: deny_identity
+        next_state: wrong_party
+        response: "I apologize for the inconvenience. Could you please share who I am speaking with?"
+      - intent: request_human
+        next_state: end
+        response: "I will connect you to a representative. Please hold."
+    default_transition:
+      next_state: identity_verify
+      response: "I need to verify your identity. Are you {customer_name}?"
+
+  # Wrong party contact
+  wrong_party:
+    entry_prompt: "I apologize. Could you please pass the phone to {customer_name}?"
+    transitions:
+      - intent: confirm_identity
+        next_state: disclosure
+        response: "Thank you. Let me verify - you are {customer_name}, correct?"
+      - intent: deny_identity
+        next_state: end
+        response: "I understand. We will try to reach the correct person. Thank you."
+    default_transition:
+      next_state: end
+      response: "Thank you for your time. Goodbye."
+
+  # Recording disclosure (RBI compliance)
+  disclosure:
+    entry_prompt: "Before we proceed, I want to inform you that this call is being recorded for quality and training purposes. Do you acknowledge this?"
+    transitions:
+      - intent: acknowledge
+        next_state: purpose_explain
+        response: "Thank you for acknowledging."
+      - intent: refuse_recording
+        next_state: end
+        response: "I understand. We cannot proceed without your acknowledgment. We will contact you through other means. Thank you."
+    default_transition:
+      next_state: purpose_explain
+      response: "I will take that as acknowledgment. Thank you."
+
+  # Explain purpose of call
+  purpose_explain:
+    entry_prompt: "I'm calling regarding your loan for {product_type}. Your recent EMI payment of Rs. {emi_amount} could not be processed. The amount of Rs. {overdue_amt} is now overdue."
+    transitions:
+      - intent: acknowledge
+        next_state: payment_discussion
+        response: "I understand this can be concerning. Can we discuss when you can make this payment?"
+      - intent: dispute_debt
+        next_state: dispute_handling
+        response: "I understand you have a concern. Can you please explain what the issue is?"
+      - intent: already_paid
+        next_state: paid_claim
+        response: "Thank you for informing. Could you please share the payment reference or transaction ID?"
+      - intent: request_details
+        next_state: payment_discussion
+        response: "The overdue amount is Rs. {overdue_amt}. Can we discuss when you can make this payment?"
+    default_transition:
+      next_state: payment_discussion
+      response: "Can we discuss when you can make this payment?"
+
+  # Handle paid claim
+  paid_claim:
+    entry_prompt: "Thank you for sharing. We will verify this and update our records. If the payment is confirmed, no further action is needed."
+    transitions:
+      - intent: confirm
+        next_state: end
+        response: "Thank you. You will receive a confirmation once verified. Have a good day."
+    default_transition:
+      next_state: end
+      response: "Thank you for your time. Goodbye."
+
+  # Handle dispute
+  dispute_handling:
+    entry_prompt: "I understand your concern. However, I am not authorized to make changes to your account. I will escalate this to our disputes team who will contact you within 48 hours."
+    transitions:
+      - intent: acknowledge
+        next_state: end
+        response: "Thank you for your understanding. Our team will reach out soon. Goodbye."
+    default_transition:
+      next_state: end
+      response: "Our disputes team will contact you soon. Thank you. Goodbye."
+
+  # Payment discussion
+  payment_discussion:
+    entry_prompt: "When would you be able to make the payment of Rs. {overdue_amt}?"
+    transitions:
+      - intent: promise_to_pay
+        next_state: ptp_capture
+        response: "Thank you. Let me confirm - you will pay {ptp_amount} on {ptp_date}, correct?"
+      - intent: request_time
+        next_state: ptp_negotiate
+        response: "I understand you need time. Can you commit to a date within the next 7 days?"
+      - intent: hardship
+        next_state: hardship_handling
+        response: "I understand this is a difficult time. Can you pay at least a partial amount to show good faith?"
+      - intent: partial_payment
+        next_state: ptp_capture
+        response: "Any payment helps. How much can you pay, and when?"
+    default_transition:
+      next_state: ptp_negotiate
+      response: "I understand. Can you commit to a payment date within the next week?"
+
+  # Hardship handling
+  hardship_handling:
+    entry_prompt: "I understand your situation. Would you be able to make even a small payment to keep your account in good standing?"
+    transitions:
+      - intent: promise_to_pay
+        next_state: ptp_capture
+        response: "Thank you for your commitment. Let me confirm the details."
+      - intent: cannot_commit
+        next_state: escalate
+        response: "I understand. I will escalate this to our support team who can discuss options with you."
+    default_transition:
+      next_state: escalate
+      response: "I will have our support team contact you. They may be able to offer assistance."
+
+  # PTP negotiation
+  ptp_negotiate:
+    entry_prompt: "To avoid further impact on your credit score, we need a payment within 7 days. Can you commit to a date?"
+    transitions:
+      - intent: confirm_date
+        next_state: ptp_capture
+        response: "Thank you. So you will pay on {ptp_date}. Is that correct?"
+      - intent: cannot_commit
+        next_state: escalate
+        response: "I understand. Let me connect you to someone who can discuss other options."
+    default_transition:
+      next_state: ptp_capture
+      response: "Let me confirm the details of your commitment."
+
+  # PTP capture
+  ptp_capture:
+    entry_prompt: "To confirm - you will pay Rs. {ptp_amount} on {ptp_date}. Is this correct?"
+    transitions:
+      - intent: confirm
+        next_state: ptp_confirm
+        response: "Excellent. I have recorded your promise to pay Rs. {ptp_amount} by {ptp_date}."
+      - intent: change_date
+        next_state: ptp_negotiate
+        response: "I understand. What date works better for you?"
+      - intent: change_amount
+        next_state: payment_discussion
+        response: "I see. What amount can you commit to paying?"
+    default_transition:
+      next_state: ptp_confirm
+      response: "I am recording your commitment to pay Rs. {ptp_amount} by {ptp_date}."
+
+  # PTP confirmation
+  ptp_confirm:
+    entry_prompt: "Thank you for your commitment. You will receive an SMS with payment details and a UPI link. Please make the payment by {ptp_date}."
+    transitions:
+      - intent: confirm
+        next_state: closing
+        response: "Thank you. Is there anything else I can help you with?"
+      - intent: question
+        next_state: closing
+        response: "For any questions, please call our customer service. Thank you."
+    default_transition:
+      next_state: closing
+      response: "Thank you for your time."
+
+  # Escalate to human
+  escalate:
+    entry_prompt: "I will transfer you to one of our representatives who can assist you further. Please hold."
+    transitions: []
+    default_transition:
+      next_state: end
+      response: "Transferring now. Please hold."
+
+  # Closing
+  closing:
+    entry_prompt: "Thank you for speaking with me today. We appreciate your cooperation. Have a good day."
+    transitions:
+      - intent: confirm
+        next_state: end
+        response: "Thank you. Goodbye."
+      - intent: question
+        next_state: end
+        response: "Please call our customer service for any questions. Thank you. Goodbye."
+    default_transition:
+      next_state: end
+      response: "Thank you. Goodbye."
+
+  # End state
+  end:
+    entry_prompt: "Goodbye."
+    transitions: []

@@ -1,0 +1,176 @@
+# Pre-Due Reminder Flow
+# Reminder call before EMI due date to prevent bounce
+
+flow_name: pre_due_reminder
+description: "Proactive reminder before EMI due date"
+
+states:
+  # Start: Initial greeting
+  start:
+    entry_prompt: "Namaste, I am calling from the bank regarding your {product_type} loan. May I speak with {customer_name}?"
+    transitions:
+      - intent: confirm_identity
+        next_state: disclosure
+        response: "Thank you for confirming."
+      - intent: deny_identity
+        next_state: wrong_party
+        response: "I apologize. Could you please share who I am speaking with?"
+    default_transition:
+      next_state: identity_verify
+      response: "Am I speaking with {customer_name}?"
+
+  # Wrong party
+  wrong_party:
+    entry_prompt: "I apologize for the inconvenience. Could you please pass the phone to {customer_name}?"
+    transitions:
+      - intent: confirm_identity
+        next_state: disclosure
+        response: "Thank you."
+      - intent: deny_identity
+        next_state: end
+        response: "I understand. Thank you for your time."
+    default_transition:
+      next_state: end
+      response: "Thank you. Goodbye."
+
+  # Recording disclosure
+  disclosure:
+    entry_prompt: "Before we proceed, please note that this call is being recorded for quality purposes. Do you acknowledge?"
+    transitions:
+      - intent: acknowledge
+        next_state: purpose_explain
+        response: "Thank you."
+      - intent: refuse_recording
+        next_state: end
+        response: "I understand. We will contact you through other means. Thank you."
+    default_transition:
+      next_state: purpose_explain
+      response: "Thank you for your acknowledgment."
+
+  # Explain purpose
+  purpose_explain:
+    entry_prompt: "This is a friendly reminder that your EMI of Rs. {emi_amount} is due on {due_date}, which is {days_to_due} days from now. I wanted to ensure your account has sufficient balance."
+    transitions:
+      - intent: acknowledge
+        next_state: balance_check
+        response: "Great. Do you have sufficient balance in your account for the EMI deduction?"
+      - intent: already_paid
+        next_state: paid_confirm
+        response: "Thank you for informing. Could you share the payment details?"
+      - intent: request_details
+        next_state: balance_check
+        response: "The EMI amount is Rs. {emi_amount} and will be deducted on {due_date}. Do you have sufficient balance?"
+    default_transition:
+      next_state: balance_check
+      response: "Do you have sufficient balance for the EMI deduction on {due_date}?"
+
+  # Paid confirmation
+  paid_confirm:
+    entry_prompt: "Thank you for the advance payment. We will verify and update our records accordingly."
+    transitions:
+      - intent: confirm
+        next_state: closing
+        response: "Thank you. Is there anything else I can help with?"
+    default_transition:
+      next_state: closing
+      response: "Thank you for your time."
+
+  # Balance check
+  balance_check:
+    entry_prompt: "Do you have sufficient balance in your account ending with {account_last_4} for the EMI deduction?"
+    transitions:
+      - intent: confirm
+        next_state: confirmation
+        response: "Excellent. Thank you for confirming."
+      - intent: deny
+        next_state: insufficient_balance
+        response: "I understand. It's important to ensure sufficient balance to avoid bounce charges."
+      - intent: uncertain
+        next_state: advice
+        response: "Please check your account balance before {due_date} to avoid any issues."
+    default_transition:
+      next_state: advice
+      response: "Please ensure sufficient balance by {due_date}."
+
+  # Insufficient balance handling
+  insufficient_balance:
+    entry_prompt: "If the EMI bounces, there will be a bounce charge of Rs. {bounce_charge} plus late payment charges. Can you arrange funds before {due_date}?"
+    transitions:
+      - intent: confirm
+        next_state: confirmation
+        response: "Great. Thank you for your commitment."
+      - intent: cannot_commit
+        next_state: alternative_payment
+        response: "Would you like to make a manual payment instead to avoid bounce charges?"
+      - intent: request_time
+        next_state: alternative_payment
+        response: "I understand. Would you prefer to make a manual payment to avoid additional charges?"
+    default_transition:
+      next_state: alternative_payment
+      response: "To avoid bounce charges, you can make a manual payment via UPI or online banking."
+
+  # Alternative payment
+  alternative_payment:
+    entry_prompt: "You can make the payment manually via UPI, NEFT, or through our payment link. Would you like to receive the payment link via SMS?"
+    transitions:
+      - intent: confirm
+        next_state: send_link
+        response: "I will send the payment link to your registered mobile number ending with {phone_last_4}."
+      - intent: deny
+        next_state: advice
+        response: "No problem. You can also pay through your bank's net banking or visit our branch."
+    default_transition:
+      next_state: send_link
+      response: "I will send the payment details via SMS."
+
+  # Send payment link
+  send_link:
+    entry_prompt: "I have sent the payment link to your mobile. Please complete the payment before {due_date} to avoid any charges."
+    transitions:
+      - intent: confirm
+        next_state: confirmation
+        response: "Thank you. You will receive the link shortly."
+    default_transition:
+      next_state: confirmation
+      response: "Please check your SMS for the payment link."
+
+  # Advice
+  advice:
+    entry_prompt: "Please ensure sufficient balance by {due_date} to avoid bounce charges of Rs. {bounce_charge} and impact on your credit score."
+    transitions:
+      - intent: acknowledge
+        next_state: confirmation
+        response: "Thank you for your attention."
+    default_transition:
+      next_state: confirmation
+      response: "Thank you."
+
+  # Confirmation
+  confirmation:
+    entry_prompt: "To summarize - your EMI of Rs. {emi_amount} is due on {due_date}. Please ensure payment to maintain your good credit standing."
+    transitions:
+      - intent: confirm
+        next_state: closing
+        response: "Thank you for your cooperation."
+      - intent: question
+        next_state: closing
+        response: "For any questions, please call our customer service. Thank you."
+    default_transition:
+      next_state: closing
+      response: "Thank you."
+
+  # Closing
+  closing:
+    entry_prompt: "Thank you for your time. We appreciate your prompt payments. Have a good day."
+    transitions:
+      - intent: confirm
+        next_state: end
+        response: "Thank you. Goodbye."
+    default_transition:
+      next_state: end
+      response: "Goodbye."
+
+  # End
+  end:
+    entry_prompt: "Goodbye."
+    transitions: []
