@@ -1,0 +1,162 @@
+# Metabase Dashboard Configuration
+# Maps SQL queries to dashboard cards
+
+dashboards:
+  - name: "Portfolio Command"
+    description: "Portfolio health, bounce rates, resolution rates, bucket flows"
+    queries:
+      - name: "Portfolio Summary"
+        file: "portfolio_command.sql"
+        section: "Query 1"
+        viz_type: "table"
+        size: { width: 12, height: 4 }
+
+      - name: "Bounce Rate Trend"
+        file: "portfolio_command.sql"
+        section: "Query 2"
+        viz_type: "line"
+        size: { width: 6, height: 4 }
+
+      - name: "Resolution Rate by Bucket"
+        file: "portfolio_command.sql"
+        section: "Query 3"
+        viz_type: "bar"
+        size: { width: 6, height: 4 }
+
+      - name: "Collection Efficiency"
+        file: "portfolio_command.sql"
+        section: "Query 4"
+        viz_type: "scalar"
+        size: { width: 3, height: 2 }
+
+      - name: "Portfolio by Product"
+        file: "portfolio_command.sql"
+        section: "Query 5"
+        viz_type: "bar"
+        size: { width: 6, height: 4 }
+
+      - name: "Portfolio by Zone"
+        file: "portfolio_command.sql"
+        section: "Query 6"
+        viz_type: "bar"
+        size: { width: 6, height: 4 }
+
+      - name: "Roll Matrix"
+        file: "portfolio_command.sql"
+        section: "Query 7"
+        viz_type: "table"
+        size: { width: 8, height: 5 }
+
+      - name: "NPA Movement"
+        file: "portfolio_command.sql"
+        section: "Query 8"
+        viz_type: "line"
+        size: { width: 6, height: 4 }
+
+  - name: "Calling Ops"
+    description: "Call metrics, bot performance, agent productivity, PTP tracking"
+    queries:
+      - name: "Call Metrics by Channel"
+        file: "calling_ops.sql"
+        section: "Query 1"
+        viz_type: "table"
+        size: { width: 12, height: 3 }
+
+      - name: "Call Volume Trend"
+        file: "calling_ops.sql"
+        section: "Query 2"
+        viz_type: "line"
+        size: { width: 8, height: 4 }
+
+      - name: "Slot Heatmap"
+        file: "calling_ops.sql"
+        section: "Query 3"
+        viz_type: "bar"
+        size: { width: 6, height: 4 }
+
+      - name: "Bot Containment"
+        file: "calling_ops.sql"
+        section: "Query 4"
+        viz_type: "line"
+        size: { width: 6, height: 4 }
+
+      - name: "Agent Productivity"
+        file: "calling_ops.sql"
+        section: "Query 5"
+        viz_type: "table"
+        size: { width: 12, height: 5 }
+
+      - name: "PTP Performance"
+        file: "calling_ops.sql"
+        section: "Query 6"
+        viz_type: "bar"
+        size: { width: 6, height: 4 }
+
+      - name: "Disposition Distribution"
+        file: "calling_ops.sql"
+        section: "Query 7"
+        viz_type: "pie"
+        size: { width: 4, height: 4 }
+
+      - name: "Queue SLA"
+        file: "calling_ops.sql"
+        section: "Query 8"
+        viz_type: "scalar"
+        size: { width: 4, height: 2 }
+
+  - name: "Field Ops"
+    description: "Field visit metrics, beat adherence, geographic performance"
+    queries:
+      - name: "Visit Summary"
+        file: "field_ops.sql"
+        section: "Query 1"
+        viz_type: "table"
+        size: { width: 8, height: 3 }
+
+      - name: "Strike Rate Trend"
+        file: "field_ops.sql"
+        section: "Query 2"
+        viz_type: "line"
+        size: { width: 8, height: 4 }
+
+      - name: "Collections by Mode"
+        file: "field_ops.sql"
+        section: "Query 3"
+        viz_type: "pie"
+        size: { width: 4, height: 4 }
+
+      - name: "Agent Productivity"
+        file: "field_ops.sql"
+        section: "Query 4"
+        viz_type: "table"
+        size: { width: 12, height: 5 }
+
+      - name: "Beat Adherence"
+        file: "field_ops.sql"
+        section: "Query 5"
+        viz_type: "bar"
+        size: { width: 6, height: 4 }
+
+      - name: "Geographic Heatmap"
+        file: "field_ops.sql"
+        section: "Query 6"
+        viz_type: "table"
+        size: { width: 12, height: 5 }
+
+      - name: "Visit Dispositions"
+        file: "field_ops.sql"
+        section: "Query 7"
+        viz_type: "bar"
+        size: { width: 6, height: 4 }
+
+      - name: "Collections vs Expectations"
+        file: "field_ops.sql"
+        section: "Query 8"
+        viz_type: "line"
+        size: { width: 8, height: 4 }
+
+      - name: "Top Performers"
+        file: "field_ops.sql"
+        section: "Query 9"
+        viz_type: "table"
+        size: { width: 12, height: 5 }

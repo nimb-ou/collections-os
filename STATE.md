@@ -1,7 +1,7 @@
 # CollectOS Build State
 
 **Last Updated:** 2026-07-19
-**Session:** 8 — API
+**Session:** 9 — BI Bootstrap
 **Status:** ✅ Complete
 
 ---
@@ -752,6 +752,143 @@ d500280 - "Session 8: FastAPI Backend with JWT Authentication"
 
 ---
 
+## Session 9: BI Bootstrap — COMPLETE
+
+### What Was Done
+- Created BI module structure with queries and dashboards
+- Wrote 25 comprehensive SQL queries for 3 operational dashboards
+- Created Metabase dashboard configuration in YAML
+- Built Python bootstrap script for auto-provisioning via Metabase API
+- Documented all queries and setup procedures
+
+### BI Structure
+```
+bi/
+├── __init__.py
+├── README.md - Complete documentation
+├── bootstrap.py - Metabase API provisioning script (320 lines)
+├── dashboards/
+│   └── config.yaml - Dashboard layout configuration
+└── queries/
+    ├── portfolio_command.sql - 8 portfolio queries
+    ├── calling_ops.sql - 8 calling/bot queries
+    └── field_ops.sql - 9 field operations queries
+```
+
+### Dashboard 1: Portfolio Command (8 Queries)
+**Purpose**: Portfolio health monitoring and KPI tracking
+
+**Queries**:
+1. **Portfolio Summary**: Accounts, overdue, POS by bucket
+2. **Bounce Rate Trend**: Daily bounce % (last 30 days)
+3. **Resolution Rate by Bucket**: What % cleared dues
+4. **Collection Efficiency**: ₹ collected ÷ ₹ demanded (MTD)
+5. **Portfolio by Product**: HCV, LCV, Tractor, CE, Tipper performance
+6. **Portfolio by Zone**: Geographic distribution
+7. **Roll Matrix**: Bucket transitions (X→1 flow, roll-forward, stabilization)
+8. **NPA Movement**: 90+ DPD trend
+
+### Dashboard 2: Calling Ops (8 Queries)
+**Purpose**: Call center and telecaller performance
+
+**Queries**:
+1. **Call Metrics by Channel**: Bot vs TC (attempts, connects, RPC, PTP)
+2. **Call Volume Trend**: Daily attempts and outcomes (30 days)
+3. **Slot Heatmap**: Best calling hours (8 AM - 7 PM analysis)
+4. **Bot Containment**: What % resolved without human escalation
+5. **Agent Productivity**: Calls/connects/PTPs per agent (today)
+6. **PTP Performance**: Made vs kept vs broken
+7. **Disposition Distribution**: Common call outcomes
+8. **Queue SLA**: Are accounts called within 2h window?
+
+### Dashboard 3: Field Ops (9 Queries)
+**Purpose**: Field agent performance and geographic insights
+
+**Queries**:
+1. **Visit Summary**: Outcomes (met, not found, collected)
+2. **Strike Rate Trend**: % productive visits (30 days)
+3. **Collections by Mode**: Cash, UPI, NACH breakdown
+4. **Agent Productivity**: Visits, meet rate, collections per agent
+5. **Beat Adherence**: Planned vs completed stops
+6. **Geographic Heatmap**: Collections by zone/state
+7. **Visit Dispositions**: Detailed outcome breakdown
+8. **Collections vs Expectations**: Actual vs beat plan targets
+9. **Top Performers**: Leaderboard by collections (30 days)
+
+### Bootstrap Script Features
+- **Metabase API Integration**: Auto-creates dashboards, questions, cards
+- **SQL Query Extraction**: Parses queries from files by section
+- **Layout Management**: Grid-based card positioning (12-column)
+- **Visualization Mapping**: table, line, bar, scalar, pie charts
+- **Idempotent**: Safe to re-run without duplication
+- **Error Handling**: Graceful fallbacks with clear messages
+
+### SQL Query Highlights
+- **Performance Optimized**: Uses indexed columns, efficient joins
+- **Dynamic Date Ranges**: `CURRENT_DATE - INTERVAL` for rolling windows
+- **Comprehensive Metrics**: Connect rates, PTP conversion, strike rates, etc.
+- **Geographic Analysis**: Zone/state breakdowns with lat/lon support
+- **Time Series**: Trends over 7/30/90 day windows
+- **Leaderboards**: RANK() for agent/team performance
+
+### Configuration
+**Dashboard Layout** (dashboards/config.yaml):
+- Maps each SQL query to dashboard card
+- Defines visualization type and size
+- Supports responsive grid layout (12 columns)
+- 25 cards across 3 dashboards
+
+### Usage
+```bash
+# Bootstrap all dashboards
+python -m bi.bootstrap
+
+# Or with environment variables
+export METABASE_URL=http://localhost:3000
+export METABASE_USER=admin@collectos.local
+export METABASE_PASSWORD=changeme
+python bi/bootstrap.py
+```
+
+### Dashboard Highlights
+**Portfolio Command**:
+- Real-time portfolio health by bucket
+- Bounce rate monitoring
+- Roll matrix shows bucket transitions
+- Collection efficiency tracking
+
+**Calling Ops**:
+- Bot vs human performance comparison
+- Hourly heatmap for optimal calling times
+- Bot containment rate (automation effectiveness)
+- Agent leaderboards
+
+**Field Ops**:
+- Visit strike rate (productivity %)
+- Geographic performance heatmap
+- Beat plan vs actual comparison
+- Top performer tracking
+
+### Technical Details
+- **25 SQL queries** total across 3 dashboards
+- **Metabase API** for programmatic provisioning
+- **YAML configuration** for maintainability
+- **Section-based query extraction** from SQL files
+- **Grid layout system** (12-column responsive)
+- **Multiple viz types**: table, line, bar, scalar, pie
+
+### Notes
+- Bootstrap script requires Metabase running (port 3000)
+- PostgreSQL connection must be added manually first time
+- All queries tested against synthetic data (30k accounts)
+- Queries use mart_account_daily and fact tables
+- Date filters are dynamic (no hardcoded dates)
+
+### Commit Hash
+TBD - "Session 9: BI Bootstrap"
+
+---
+
 ## Build Progress (§23 Checklist)
 
 - [x] **S0 — Environment** ✅ 2026-07-19
@@ -763,7 +900,7 @@ d500280 - "Session 8: FastAPI Backend with JWT Authentication"
 - [x] **S6 — Treatment Strategy** ✅ 2026-07-19
 - [x] **S7 — Allocation Engine** ✅ 2026-07-19
 - [x] **S8 — API** ✅ 2026-07-19
-- [ ] S9 — BI bootstrap
+- [x] **S9 — BI Bootstrap** ✅ 2026-07-19
 - [ ] S10 — Ops console
 - [ ] S11 — Bot core
 - [ ] S12 — Bot at volume
