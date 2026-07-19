@@ -524,7 +524,7 @@ strategy/
 - All treatment logic is deterministic and audit-friendly (YAML versioning)
 
 ### Commit Hash
-TBD - "Session 6: Treatment Strategy Engine"
+f2677a9 - "Session 6: Treatment Strategy Engine"
 
 ---
 
