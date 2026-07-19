@@ -1,7 +1,7 @@
 # CollectOS Build State
 
 **Last Updated:** 2026-07-19
-**Session:** 4 — dbt marts + Dagster
+**Session:** 5 — ML Models
 **Status:** ✅ Complete
 
 ---
@@ -355,6 +355,92 @@ dagster/
 
 ---
 
+## Session 5: ML Models — COMPLETE
+
+### What Was Done
+- Created models_ml infrastructure with config, features, trainer, registry modules
+- Implemented feature engineering from mart_account_daily and fact tables
+- Built LightGBM training pipeline with isotonic calibration
+- Implemented SHAP explainability for model interpretability
+- Trained M1 Bounce prediction model (AUC=0.7817)
+- Trained M2 Self-cure prediction model (AUC=0.8747)
+- Saved model artifacts and SHAP explanations to disk
+
+### Models Trained
+
+**M1 Bounce Prediction:**
+- **Target**: Predict probability of EMI presentation bounce
+- **AUC**: 0.7817 (Target: 0.78, Min: 0.75) ✅
+- **Training samples**: 21,938 (17.08% positive rate)
+- **Test performance**: 4,388 samples, 193/749 true positives captured
+- **Top features by SHAP**:
+  1. overdue_amt (0.119)
+  2. bounce_rate_12m (0.093)
+  3. bounces_12m (0.061)
+  4. current_dpd (0.023)
+- **Artifacts**: models_ml/artifacts/bounce_v1.0.0_20260719_081943/
+
+**M2 Self-cure Prediction:**
+- **Target**: Predict probability of self-cure within 7 days post-bounce
+- **AUC**: 0.8747 (Target: 0.75, Min: 0.72) ✅
+- **Training samples**: 4,710 recent bounces
+- **Test performance**: 942 samples, 143/241 true positives captured
+- **Top features by SHAP**:
+  1. current_dpd (0.470)
+  2. overdue_amt (0.234)
+  3. pos (0.073)
+  4. emi_amt (0.061)
+- **Artifacts**: models_ml/artifacts/selfcure_v1.0.0_20260719_081957/
+
+### models_ml Structure
+```
+models_ml/
+├── __init__.py
+├── config.py - Model configs, LightGBM params, feature sets
+├── features.py - Feature engineering from PostgreSQL
+├── trainer.py - LightGBM training with calibration and SHAP
+├── registry.py - Model versioning interface (for future DB integration)
+├── train.py - Training orchestration script
+├── artifacts/ - Saved models (LightGBM + calibrated + metadata)
+│   ├── bounce_v1.0.0_20260719_081943/
+│   └── selfcure_v1.0.0_20260719_081957/
+└── shap/ - SHAP explainability artifacts
+    ├── bounce_shap.pkl
+    └── selfcure_shap.pkl
+```
+
+### Technical Details
+- **Framework**: LightGBM 4.6.0 with isotonic calibration
+- **Features**: Historical bounce rates, payment patterns, account characteristics, seasonality
+- **Calibration**: Isotonic regression for probability calibration
+- **Explainability**: SHAP TreeExplainer with global feature importance
+- **Train/Val/Test split**: 70% / 10% / 20% stratified
+- **Early stopping**: 20 rounds on validation AUC
+
+### Performance
+- M1 Bounce training: ~15 seconds (21k samples)
+- M2 Self-cure training: ~8 seconds (4.7k samples)
+- SHAP computation: ~2-3 seconds per model
+
+### Verification Results
+✅ M1 Bounce: AUC=0.7817 exceeds target 0.78
+✅ M2 Self-cure: AUC=0.8747 far exceeds target 0.75
+✅ Both models exceed minimum AUC thresholds
+✅ SHAP explanations generated and saved
+✅ Model artifacts saved with metadata
+✅ Feature importance matches domain expectations (overdue_amt, bounce history top features)
+
+### Notes
+- Model registry database integration deferred (requires migration 006 to be re-applied)
+- Models currently saved to disk only with complete metadata
+- M3 Roll-forward model deferred to future sessions
+- Both models ready for batch scoring pipeline integration
+
+### Commit Hash
+TBD - "Session 5: ML Models (M1 Bounce + M2 Self-cure)"
+
+---
+
 ## Build Progress (§23 Checklist)
 
 - [x] **S0 — Environment** ✅ 2026-07-19
@@ -362,7 +448,7 @@ dagster/
 - [x] **S2 — Synthgen core** ✅ 2026-07-19
 - [x] **S3 — Synthgen history** ✅ 2026-07-19
 - [x] **S4 — dbt marts + Dagster** ✅ 2026-07-19
-- [ ] S5 — Models
+- [x] **S5 — Models (M1 + M2)** ✅ 2026-07-19
 - [ ] S6 — Treatment + queues
 - [ ] S7 — Allocation
 - [ ] S8 — API
