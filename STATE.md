@@ -2344,7 +2344,7 @@ Makefile - Updated demo target
 5. Multi-cloud deployment
 
 ### Commit Hash
-TBD - "Session 15: E2E Demo, README, and v1.0 Release"
+ac2edc6 - "Session 15: E2E Demo, README, and v1.0 Release"
 
 ---
 
