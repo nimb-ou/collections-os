@@ -748,7 +748,7 @@ uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 - pydantic-settings - Environment configuration
 
 ### Commit Hash
-TBD - "Session 8: API"
+d500280 - "Session 8: FastAPI Backend with JWT Authentication"
 
 ---
 
