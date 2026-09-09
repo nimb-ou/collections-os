@@ -162,7 +162,7 @@ class TreatmentEngine:
                 treatment_def = self.treatments[treatment_code]
 
                 return {
-                    'account_id': account_data['account_id'],
+                    'account_id': account_data.get('account_id', 'unknown'),
                     'treatment_code': treatment_code,
                     'treatment_name': treatment_def['name'],
                     'channels': treatment_def['channels'],
@@ -172,7 +172,7 @@ class TreatmentEngine:
                 }
 
         # Should never reach here if default rule is defined
-        raise ValueError(f"No treatment matched for account {account_data['account_id']}")
+        raise ValueError(f"No treatment matched for account {account_data.get('account_id', 'unknown')}")
 
     def check_guardrails(self, account_id: str, contact_history: List[Dict]) -> Dict:
         """

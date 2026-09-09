@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .middleware import AuditLogMiddleware
-from .routers import auth, accounts, queues, beatplan
+from .routers import auth, accounts, queues, beatplan, campaigns
 
 # Create FastAPI app
 app = FastAPI(
@@ -53,6 +53,7 @@ app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(accounts.router, prefix=settings.api_prefix)
 app.include_router(queues.router, prefix=settings.api_prefix)
 app.include_router(beatplan.router, prefix=settings.api_prefix)
+app.include_router(campaigns.router, prefix=settings.api_prefix)
 
 
 @app.get("/")
