@@ -173,7 +173,7 @@ flowchart LR
   G-->H & I & J & K
   H & I & J -->|dispositions, PTPs, payments| C
   C-->L & M & N
-  O[Dagster orchestrator] -.schedules.-> B & D & E & F & G & M & N
+  O[Dagster pipeline engine] -.schedules.-> B & D & E & F & G & M & N
   P[FastAPI backend + JWT roles] --- G & H & I & J & M
 ```
 
@@ -183,7 +183,7 @@ flowchart LR
 |---|---|---|
 | Database | **PostgreSQL 16** (Docker) | Free, handles 100M+ row partitioned tables easily |
 | Transformations | **dbt-core + dbt-postgres** | Free, tested SQL lineage, enterprise-credible |
-| Orchestration | **Dagster OSS** | Free, asset-based, great UI for demos; cron fallback |
+| Pipeline Execution | **Dagster OSS** | Free, asset-based, great UI for demos; cron fallback |
 | ML | **LightGBM + scikit-learn + SHAP** | Free, fast on CPU, explainable |
 | Optimization | **Google OR-Tools** | Free allocation solver |
 | API | **FastAPI + Uvicorn**, JWT auth | Free, async, OpenAPI docs |

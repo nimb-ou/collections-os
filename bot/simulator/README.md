@@ -101,7 +101,7 @@ DISPUTING persona (angry, cooperation=0.20):
 
 #### 3. Call Simulator (`simulator.py`)
 
-Orchestrates complete conversations between bot and persona.
+Coordinates complete conversations between bot and persona.
 
 **Flow:**
 1. Check if customer answers (based on `answer_probability`)

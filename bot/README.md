@@ -132,7 +132,7 @@ print(result["slots"])  # {"amount": "5000", "date": "tomorrow"}
 
 ### 4. Conversation State Engine (`state_engine.py`)
 
-**Purpose**: Orchestrate dialog flow with finite-state machine
+**Purpose**: Coordinate dialog flow with finite-state machine
 
 **Features**:
 - YAML-defined conversation flows

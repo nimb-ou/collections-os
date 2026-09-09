@@ -1,6 +1,6 @@
 """
-CollectOS Dagster Orchestration
-Daily pipeline orchestrator for dbt marts, scoring, treatment, and allocation.
+CollectOS Dagster Data Pipeline
+Daily pipeline engine for dbt marts, scoring, treatment, and allocation.
 """
 
 from dagster import Definitions

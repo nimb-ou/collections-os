@@ -142,7 +142,7 @@ collections-os/
 │   ├── roster_generator.py   # Agent hierarchy (RCM → ACM → TL → FOS/TC)
 │   ├── history_generator.py  # 24-month behavioral simulation
 │   ├── db_loader.py          # PostgreSQL bulk loader
-│   └── seed.py               # Main orchestration
+│   └── seed.py               # Main pipeline execution
 ├── dbt/
 │   └── models/
 │       ├── staging/          # 5 staging models + 33 tests
@@ -171,7 +171,7 @@ collections-os/
 │   │   ├── stt.py            # Speech-to-text (Whisper)
 │   │   ├── tts.py            # Text-to-speech (Piper)
 │   │   ├── llm.py            # LLM dialogue (Ollama Qwen)
-│   │   └── orchestrator.py   # Call flow orchestration
+│   │   └── pipeline engine.py   # Call flow pipeline execution
 │   ├── simulator/            # Automated testing
 │   │   ├── personas.py       # 5 behavioral customer types
 │   │   ├── persona_responses.py # LLM-driven responses
@@ -422,7 +422,7 @@ resolution_score = (actual_resolved / expected_resolved) × 100
 - **OR-Tools**: Optimization
 
 ### Infrastructure
-- **Docker Compose**: Service orchestration
+- **Docker Compose**: Service pipeline execution
 - **Colima**: Container runtime (Docker Desktop alternative)
 - **Python 3.12**: Core language
 - **Node.js 20**: Frontend tooling
@@ -525,7 +525,7 @@ pytest quality/ -v
 2. **API endpoints**: Add route in `api/routes/`
 3. **dbt models**: Add in `dbt/models/marts/`
 4. **ML models**: Add in `models_ml/train/`
-5. **Bot capabilities**: Extend `bot/core/orchestrator.py`
+5. **Bot capabilities**: Extend `bot/core/pipeline engine.py`
 
 ### Code Style
 

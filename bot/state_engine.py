@@ -1,6 +1,6 @@
 """
 Conversation State Engine
-Finite-state dialog orchestrator with compliance guardrails
+Finite-state dialog manager with compliance guardrails
 """
 
 import logging
@@ -108,7 +108,7 @@ class ConversationState:
 class StateEngine:
     """
     Finite-state dialog engine.
-    Orchestrates conversation flow based on YAML flow definitions.
+    Coordinates conversation flow based on YAML flow definitions.
     """
 
     def __init__(self, flow_type: str):

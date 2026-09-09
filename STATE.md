@@ -139,7 +139,7 @@ b06d352 - "Session 1: Initial scaffold - repository structure and database setup
 - Implemented PortfolioGenerator with CV/CE product mix and behavioral archetypes
 - Implemented RosterGenerator with complete agent hierarchy (RCM → ACM → TL → FOS/TC)
 - Implemented DatabaseLoader with bulk insert and geo_id mapping
-- Created main seed orchestration script (seed.py)
+- Created main seed pipeline execution script (seed.py)
 - Fixed date handling for EMI schedules (leap year support)
 - Fixed agent team allocation for small agent counts
 - Fixed foreign key handling for geo_ids between generators and database
@@ -153,7 +153,7 @@ b06d352 - "Session 1: Initial scaffold - repository structure and database setup
 **synthgen/portfolio_generator.py** - Loan accounts with CV/CE characteristics and EMI schedules
 **synthgen/roster_generator.py** - Agent hierarchy with geographic assignment
 **synthgen/db_loader.py** - PostgreSQL bulk loader with geo_id mapping
-**synthgen/seed.py** - Main orchestration script
+**synthgen/seed.py** - Main pipeline execution script
 **synthgen/__main__.py** - Module entry point
 
 ### Data Generated (SMALL_MODE)
@@ -222,7 +222,7 @@ b06d352 - "Session 1: Initial scaffold - repository structure and database setup
 ### What Was Done
 - Created history_generator.py with full 24-month behavioral simulation
 - Created history_loader.py for bulk loading fact tables
-- Created generate_history.py as main orchestration script
+- Created generate_history.py as main pipeline execution script
 - Added migration 011 for permanent account_archetypes table
 - Updated db_loader to use permanent archetypes table
 - Generated 634k presentations, 576k payments, 658k calls, 36k visits
@@ -400,7 +400,7 @@ models_ml/
 ├── features.py - Feature engineering from PostgreSQL
 ├── trainer.py - LightGBM training with calibration and SHAP
 ├── registry.py - Model versioning interface (for future DB integration)
-├── train.py - Training orchestration script
+├── train.py - Training pipeline execution script
 ├── artifacts/ - Saved models (LightGBM + calibrated + metadata)
 │   ├── bounce_v1.0.0_20260719_081943/
 │   └── selfcure_v1.0.0_20260719_081957/
@@ -536,7 +536,7 @@ f2677a9 - "Session 6: Treatment Strategy Engine"
 - Implemented AllocationEngine with greedy and OR-Tools CP-SAT algorithms
 - Implemented BeatPlanner with TSP-based route optimization for field agents
 - Implemented RebalanceEngine for daily allocation adjustments
-- Created run_monthly_allocation() orchestration function
+- Created run_monthly_allocation() pipeline execution function
 - Tested successfully: 14,652 accounts allocated, 612 beat plan stops generated
 
 ### Allocation Capabilities
@@ -1132,7 +1132,7 @@ All pages query from:
 - Pre-defined intent sets per state
 
 **5. Conversation State Engine (state_engine.py)**
-- Finite-state dialog orchestrator
+- Finite-state dialog pipeline engine
 - YAML flow loading
 - State transitions
 - Compliance guardrails:
@@ -1400,7 +1400,7 @@ TBD - "Session 11: Bot Core - AI Voice Bot Infrastructure"
 - Generates appropriate PTPs based on persona characteristics
 
 **3. Call Simulator (simulator.py - 280 lines)**
-- Orchestrates bot-persona conversations
+- Coordinates bot-persona conversations
 - Answer probability check (realistic no-answer rates)
 - Full conversation flow with state engine
 - PTP negotiation handling
@@ -1427,7 +1427,7 @@ TBD - "Session 11: Bot Core - AI Voice Bot Infrastructure"
 - Pass threshold: 70+
 - Findings categorized by severity
 
-**6. Orchestration Script (run_simulator.py - 150 lines)**
+**6. Pipeline Execution Script (run_simulator.py - 150 lines)**
 - Main entry point for simulation
 - CLI interface with argparse
 - Database integration
@@ -1550,7 +1550,7 @@ bot/simulator/
 ├── __init__.py (module interface)
 ├── personas.py (300 lines) - Persona generator
 ├── persona_responses.py (250 lines) - LLM response engine
-├── simulator.py (280 lines) - Call orchestrator
+├── simulator.py (280 lines) - Call pipeline engine
 ├── batch_processor.py (350 lines) - Queue processor
 ├── qa_rubric.py (320 lines) - Quality assessment
 ├── run_simulator.py (150 lines) - Main CLI

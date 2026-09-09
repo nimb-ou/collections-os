@@ -1,5 +1,5 @@
 """
-Call Simulator - Orchestrates bot-persona conversations
+Call Simulator - Coordinates bot-persona conversations
 
 Simulates a complete call flow:
 1. Place call to customer (answer probability check)
